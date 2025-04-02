@@ -30,24 +30,19 @@ export default function DebugPage() {
     setReportStatus('Checking report...');
     
     try {
-      const response = await fetch('/api/reports/tech_business_report_20250402_latest.html');
+      // Use the new check endpoint instead of directly accessing the report
+      const response = await fetch('/api/reports/check?filename=tech_business_report_20250402_latest.html');
+      const data = await response.json();
       
-      // Check content type
-      const contentType = response.headers.get('content-type');
-      console.log('Content-Type:', contentType);
+      console.log('Report check data:', data);
       
-      if (contentType && contentType.includes('application/json')) {
-        // Handle JSON response
-        const data = await response.json();
-        console.log('Report data:', data);
-        setReportStatus(`Report Status: ${data.error ? `Error: ${data.error}` : 'Found'}`);
-        setDebugInfo(data);
+      if (data.exists) {
+        setReportStatus(`Report Status: Found (${data.size} bytes, modified ${new Date(data.modified).toLocaleString()})`);
       } else {
-        // Handle HTML response
-        const text = await response.text();
-        console.log('Report HTML length:', text.length);
-        setReportStatus(`Report Status: Found (HTML, ${text.length} bytes)`);
+        setReportStatus(`Report Status: Not found (${data.error || 'Unknown error'})`);
       }
+      
+      setDebugInfo(data);
     } catch (error) {
       console.error('Error checking report:', error);
       setReportStatus(`Report Error: ${error instanceof Error ? error.message : 'Failed to check report'}`);

@@ -7,7 +7,7 @@ const path = require('path');
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const API_ENDPOINTS = [
   '/api/generate-report',
-  '/api/reports/tech_business_report_20250402_latest.html'
+  '/api/reports/check?filename=tech_business_report_20250402_latest.html'
 ];
 
 // Helper function to make API requests
