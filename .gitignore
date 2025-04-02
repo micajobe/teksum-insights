@@ -1,0 +1,4 @@
+.env
+docs/tech_business_report_*.html
+__pycache__
+.DS_Store
