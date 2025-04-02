@@ -33,14 +33,21 @@
         <p>Loading latest insights...</p>
     </div>
     <script>
-        // Get today's date in YYYYMMDD format
-        const today = new Date();
-        const dateStr = today.getFullYear() +
-            String(today.getMonth() + 1).padStart(2, '0') +
-            String(today.getDate()).padStart(2, '0');
-        
-        // Redirect to the most recent report
-        window.location.href = `tech_business_report_${dateStr}_latest.html`;
+        // List all reports and find the most recent one
+        fetch('.')
+            .then(response => response.text())
+            .then(text => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a'))
+                    .filter(a => a.href.includes('tech_business_report_'))
+                    .map(a => a.href)
+                    .sort()
+                    .reverse();
+                if (links.length > 0) {
+                    window.location.href = links[0];
+                }
+            });
     </script>
 </body>
 </html>
