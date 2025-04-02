@@ -604,6 +604,65 @@ class TechBusinessScraperAgent:
                 color: #999;
                 font-style: italic;
             }
+
+            /* Archive section styles */
+            .archive-section {
+                margin-top: 4rem;
+                padding-top: 2rem;
+                border-top: 2px solid var(--border-color);
+            }
+
+            .archive-section h2 {
+                font-family: 'Inter', sans-serif;
+                font-size: 1.8rem;
+                color: var(--accent-color);
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+
+            .archive-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .archive-card {
+                background: var(--secondary-color);
+                border-radius: 12px;
+                padding: 1.5rem;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .archive-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+
+            .archive-card a {
+                text-decoration: none;
+                color: var(--text-color);
+            }
+
+            .archive-date {
+                font-family: 'Inter', sans-serif;
+                font-size: 0.9rem;
+                color: var(--accent-color);
+                margin-bottom: 0.5rem;
+            }
+
+            .archive-title {
+                font-family: 'Inter', sans-serif;
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+            }
+
+            @media (max-width: 768px) {
+                .archive-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
         """
 
         html_template = f"""
@@ -640,6 +699,13 @@ class TechBusinessScraperAgent:
                         <h2>Latest Headlines</h2>
                         {headlines_html}
                     </aside>
+                </div>
+
+                <div class="archive-section">
+                    <h2>Previous Reports</h2>
+                    <div class="archive-grid">
+                        {self.get_archive_html()}
+                    </div>
                 </div>
 
                 <footer class="footer">
@@ -710,6 +776,52 @@ class TechBusinessScraperAgent:
                 "summary": "Unable to generate summary. Please check the error messages above.",
                 "file_path": None
             }
+
+    def get_archive_html(self) -> str:
+        """Generate HTML for the archive section."""
+        reports_dir = "docs"
+        archive_html = ""
+        
+        print(f"\nLooking for reports in: {reports_dir}")
+        if os.path.exists(reports_dir):
+            # Get all report files except the latest
+            report_files = [f for f in os.listdir(reports_dir) 
+                          if f.startswith('tech_business_report_') 
+                          and f.endswith('.html')
+                          and not f.endswith('_latest.html')]
+            
+            print(f"Found {len(report_files)} report files: {report_files}")
+            
+            # Sort by date (newest first) and take the 5 most recent
+            report_files.sort(reverse=True)
+            report_files = report_files[:5]
+            
+            print(f"Using {len(report_files)} most recent reports: {report_files}")
+            
+            for report_file in report_files:
+                try:
+                    # Extract date from filename
+                    # Split by underscore and get the date part (index 3)
+                    date_str = report_file.split('_')[3]  # Gets '20250401'
+                    date = datetime.strptime(date_str, '%Y%m%d')
+                    formatted_date = date.strftime('%B %d, %Y')
+                    
+                    archive_html += f"""
+                        <div class="archive-card">
+                            <a href="{report_file}">
+                                <div class="archive-date">{formatted_date}</div>
+                                <div class="archive-title">Tech & Business Report</div>
+                            </a>
+                        </div>
+                    """
+                    print(f"Added archive card for: {report_file} ({formatted_date})")
+                except Exception as e:
+                    print(f"Error processing archive file {report_file}: {str(e)}")
+                    continue
+        else:
+            print(f"Reports directory not found: {reports_dir}")
+        
+        return archive_html
 
 def main():
     try:
