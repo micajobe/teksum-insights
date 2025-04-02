@@ -115,55 +115,75 @@
         </div>
     </div>
     <script>
-        function formatDate(filename) {
-            const match = filename.match(/tech_business_report_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
-            if (match) {
-                const [_, year, month, day, hour, minute] = match;
-                const date = new Date(year, month - 1, day);
-                return date.toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric'
-                });
-            }
-            return filename;
-        }
-
-        // List all reports and find the most recent ones
-        fetch('.')
-            .then(response => response.text())
-            .then(text => {
+        async function init() {
+            try {
+                // Get the directory listing
+                const response = await fetch('.');
+                const text = await response.text();
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(text, 'text/html');
-                const links = Array.from(doc.querySelectorAll('a'))
-                    .filter(a => a.href.includes('tech_business_report_'))
-                    .map(a => a.href)
-                    .sort()
-                    .reverse();
+                
+                // Find all report links
+                let links = Array.from(doc.querySelectorAll('a'))
+                    .filter(a => {
+                        const href = a.href || '';
+                        return href.includes('tech_business_report_') && !href.includes('latest');
+                    })
+                    .map(a => {
+                        // Extract just the filename from the full URL
+                        const url = new URL(a.href);
+                        return {
+                            url: url.pathname.split('/').pop(),
+                            date: extractDateFromFilename(url.pathname.split('/').pop())
+                        };
+                    })
+                    .sort((a, b) => b.date - a.date);
 
                 if (links.length > 0) {
                     // Redirect to the most recent report
-                    window.location.href = links[0];
+                    const latestReport = links[0].url;
+                    window.location.href = latestReport;
 
-                    // Update archive list
+                    // Update archive list (though this won't be visible due to redirect)
                     const archiveList = document.getElementById('archiveList');
                     archiveList.innerHTML = links.slice(0, 5)
                         .map(link => {
-                            const filename = link.split('/').pop();
-                            const date = formatDate(filename);
-                            return `<li><a href="${link}">${date}</a></li>`;
+                            const formattedDate = formatDate(link.date);
+                            return `<li><a href="${link.url}">${formattedDate}</a></li>`;
                         })
                         .join('');
                 } else {
                     document.querySelector('.loading').textContent = 'No reports found';
                     document.getElementById('archiveList').innerHTML = '<li>No archived reports available</li>';
                 }
-            })
-            .catch(error => {
+            } catch (error) {
+                console.error('Error:', error);
                 document.querySelector('.loading').textContent = 'Error loading reports';
                 document.getElementById('archiveList').innerHTML = '<li>Error loading archives</li>';
-                console.error('Error:', error);
+            }
+        }
+
+        function extractDateFromFilename(filename) {
+            const match = filename.match(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+            if (match) {
+                const [_, year, month, day, hour, minute, second] = match;
+                return new Date(year, month - 1, day, hour, minute, second);
+            }
+            return new Date(0); // fallback for invalid dates
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
+        }
+
+        // Start the initialization
+        init();
     </script>
 </body>
 </html>
