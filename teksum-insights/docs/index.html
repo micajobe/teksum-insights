@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEKSUM Insights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #A78BFA;
+            --secondary-color: #F3F0FF;
+            --text-color: #1a1a1a;
+            --accent-color: #0017d3;
+            --bg-color: #FFFFFF;
+            --border-color: #E5E7EB;
+            --hero-bg: linear-gradient(135deg, #A78BFA 0%, #0017d3 100%);
+        }
+
+        @font-face {
+            font-family: 'GelaTrialVF';
+            src: url('GelaTrialVF.ttf') format('truetype');
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .hero {
+            background: var(--hero-bg);
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-family: 'GelaTrialVF', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            margin: 0;
+            line-height: 1;
+            color: white;
+        }
+
+        .hero-date {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            color: white;
+            margin-top: 1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .trends-section {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: var(--secondary-color);
+            border-radius: 12px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .archive-section {
+            margin-top: 4rem;
+        }
+
+        .archive-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .archive-item {
+            background: var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .archive-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .archive-link {
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .archive-date {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 50vh;
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .trends-section {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">TEKSUM</h1>
+            <div class="hero-date">Daily Tech & Business Insights</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="trends-section">
+            <h2>Today's Major Technology Trends</h2>
+            <div id="trends-content">
+                
+<h3>MAJOR TECHNOLOGY TRENDS</h3>
+<div class="section-content">
+<p class="bullet">Key technology developments focus on the use of Artificial Intelligence (AI) in various sectors, including B2B growth, generative AI, and AI in electronic warfare. There is also significant mention of technologies related to data privacy, AI auditing, and brain-computer interfaces.</p><p class="bullet">The most significant headline is "Unlocking profitable B2B growth through gen AI" as it highlights the potential of AI to enhance profitability in the B2B sector, indicating a growing trend of AI utilization in business operations and decision-making.</p>
+</div>
+
+            </div>
+            <a href="tech_business_report_20250401_latest.html" class="cta-button">Read Today's Report</a>
+        </div>
+
+        <div class="archive-section">
+            <h2>Recent Reports</h2>
+            <ul class="archive-list">
+                
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_143441.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_100540.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_095911.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_095154.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_092349.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

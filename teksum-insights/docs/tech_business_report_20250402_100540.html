@@ -1,0 +1,578 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>TEKSUM Insights</title>
+            <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+            <style>
+                
+            @font-face {
+                font-family: 'GelaTrialVF';
+                src: url('GelaTrialVF.ttf') format('truetype');
+                font-weight: 100 900;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            :root {
+                --primary-color: #A78BFA;
+                --secondary-color: #F3F0FF;
+                --text-color: #1a1a1a;
+                --accent-color: #0017d3;
+                --bg-color: #FFFFFF;
+                --border-color: #E5E7EB;
+                --hero-bg: linear-gradient(135deg, #A78BFA 0%, #0017d3 100%);
+            }
+
+            body {
+                font-family: 'Libre Baskerville', Georgia, serif;
+                line-height: 1.8;
+                margin: 0;
+                padding: 0;
+                background-color: var(--bg-color);
+                color: var(--text-color);
+            }
+
+            .hero {
+                background: var(--hero-bg);
+                min-height: 70vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                position: relative;
+                overflow: hidden;
+                padding: 2rem;
+            }
+
+            .hero-title {
+                font-family: 'GelaTrialVF', -apple-system, BlinkMacSystemFont, sans-serif;
+                font-size: min(16rem, 25vw);
+                font-weight: 800;
+                color: white;
+                text-align: center;
+                margin: 0;
+                letter-spacing: -0.02em;
+                width: 100%;
+                position: relative;
+                z-index: 2;
+                text-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                line-height: 0.9;
+                padding: 0 1rem;
+            }
+
+            .hero-date {
+                font-family: 'Inter', sans-serif;
+                font-size: 1.2rem;
+                color: white;
+                margin-top: 1rem;
+                opacity: 0.9;
+                position: relative;
+                z-index: 2;
+            }
+
+            .floating-images {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+                opacity: 0.2;
+            }
+
+            .floating-image {
+                position: absolute;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                animation: float 20s infinite ease-in-out;
+            }
+
+            @keyframes float {
+                0%, 100% { transform: translateY(0) rotate(0deg); }
+                25% { transform: translateY(-20px) rotate(5deg); }
+                75% { transform: translateY(20px) rotate(-5deg); }
+            }
+
+            .container {
+                max-width: 1140px;
+                margin: 0 auto;
+                padding: 0 1rem;
+            }
+
+            .header {
+                text-align: center;
+                padding: 3rem 0;
+                border-bottom: 2px solid var(--border-color);
+                margin-bottom: 2rem;
+            }
+
+            .header h1 {
+                font-size: 3.5rem;
+                margin: 0;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+            }
+
+            .date {
+                font-family: 'Inter', sans-serif;
+                font-size: 0.9rem;
+                color: #666;
+                margin-top: 1rem;
+            }
+
+            .main-content {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 3rem;
+                margin: 2rem 0;
+            }
+
+            .summary-section {
+                font-size: 1.1rem;
+                line-height: 1.8;
+            }
+
+            .section {
+                margin-bottom: 2rem;
+                padding-bottom: 2rem;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .section h3 {
+                font-family: 'Inter', sans-serif;
+                font-size: 1.4rem;
+                color: var(--accent-color);
+                margin: 0 0 1rem 0;
+                font-weight: 600;
+            }
+
+            .section-content {
+                margin-left: 1rem;
+            }
+
+            .bullet {
+                margin: 0.75rem 0;
+                padding-left: 1.5rem;
+                position: relative;
+            }
+
+            .bullet:before {
+                content: '•';
+                position: absolute;
+                left: 0.5rem;
+                color: var(--accent-color);
+            }
+
+            .monetization-strategy {
+                background: var(--secondary-color);
+                padding: 1.5rem;
+                margin-top: 2rem;
+                border-radius: 8px;
+                border-left: 4px solid var(--primary-color);
+            }
+
+            .monetization-strategy h4 {
+                font-family: 'Inter', sans-serif;
+                color: var(--accent-color);
+                margin: 0 0 1rem 0;
+                font-size: 1.1rem;
+                font-weight: 600;
+            }
+
+            .strategy-item {
+                margin: 0.75rem 0;
+                padding-left: 1.5rem;
+                position: relative;
+            }
+
+            .strategy-item:before {
+                content: '💡';
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            .headlines-sidebar {
+                font-family: 'Inter', sans-serif;
+            }
+
+            .headlines-sidebar h2 {
+                font-size: 1.2rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 1.5rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid var(--primary-color);
+            }
+
+            .headline-card {
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .headline-source {
+                font-size: 0.8rem;
+                color: var(--primary-color);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 0.5rem;
+            }
+
+            .headline-title {
+                font-size: 0.95rem;
+                line-height: 1.4;
+                color: var(--text-color);
+                text-decoration: none;
+                display: block;
+                transition: color 0.2s ease;
+            }
+
+            .headline-title:hover {
+                color: var(--accent-color);
+            }
+
+            .headline-card {
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--border-color);
+                transition: background-color 0.2s ease;
+            }
+
+            .headline-card:hover {
+                background-color: var(--secondary-color);
+                padding-left: 1rem;
+                margin-left: -1rem;
+                padding-right: 1rem;
+                margin-right: -1rem;
+            }
+
+            .footer {
+                text-align: center;
+                margin: 4rem 0;
+                padding-top: 2rem;
+                border-top: 2px solid var(--border-color);
+                font-family: 'Inter', sans-serif;
+                font-size: 0.9rem;
+                color: #666;
+            }
+
+            @media (max-width: 768px) {
+                .main-content {
+                    grid-template-columns: 1fr;
+                }
+                .hero {
+                    min-height: 50vh;
+                    padding: 1rem;
+                }
+                .hero-title {
+                    font-size: min(8rem, 20vw);
+                    line-height: 1;
+                }
+            }
+
+            .no-link {
+                color: #666;
+                cursor: not-allowed;
+            }
+
+            .no-link-indicator {
+                font-size: 0.8rem;
+                color: #999;
+                font-style: italic;
+            }
+
+            /* Archive section styles */
+            .archive-section {
+                margin-top: 4rem;
+                padding-top: 2rem;
+                border-top: 2px solid var(--border-color);
+            }
+
+            .archive-section h2 {
+                font-family: 'Inter', sans-serif;
+                font-size: 1.8rem;
+                color: var(--accent-color);
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+
+            .archive-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .archive-card {
+                background: var(--secondary-color);
+                border-radius: 12px;
+                padding: 1.5rem;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .archive-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+
+            .archive-card a {
+                text-decoration: none;
+                color: var(--text-color);
+            }
+
+            .archive-date {
+                font-family: 'Inter', sans-serif;
+                font-size: 0.9rem;
+                color: var(--accent-color);
+                margin-bottom: 0.5rem;
+            }
+
+            .archive-title {
+                font-family: 'Inter', sans-serif;
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+            }
+
+            @media (max-width: 768px) {
+                .archive-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .trends-grid {
+                display: grid;
+                grid-template-columns: 3fr 2fr;
+                gap: 2rem;
+                align-items: start;
+            }
+
+            .feature-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+
+            @media (max-width: 768px) {
+                .trends-grid {
+                    grid-template-columns: 1fr;
+                }
+                
+                .trends-image {
+                    margin-top: 2rem;
+                }
+            }
+        
+            </style>
+        </head>
+        <body>
+            <div class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-title">TEKSUM</h1>
+                    <div class="hero-date">Daily Tech & Business Insights</div>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="trends-section">
+                    <div class="trends-grid">
+                        <div class="trends-content">
+                            <h2>Today's Major Technology Trends</h2>
+                            <div id="trends-content">
+                                
+                    <div class="section">
+                        <h3>MAJOR TECHNOLOGY TRENDS</h3>
+                        <div class="section-content">
+                <p class="bullet">Summary of key technology developments: AI continues to be a significant trend, with many companies integrating it into their strategies for customer engagement and business growth. There's also a growing interest in the use of drones for delivery purposes, and the use of 3D printing for creating better cooling systems. Developments in brain-computer interfaces and solar geoengineering are also noteworthy.</p><p class="bullet">Most significant headline and why: "Unlocking profitable B2B growth through gen AI" - This highlights the potential of AI in driving growth in the B2B sector, showcasing the growing importance and prevalence of AI technologies in business.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>BUSINESS IMPACT ANALYSIS</h3>
+                        <div class="section-content">
+                <p class="bullet">Key business insights and their potential impact: The intersection of climate disruption and regulatory change opens up opportunities for businesses that can navigate these complexities. The potential downturn for Tesla could have significant impacts on the electric vehicle market. The collaboration between Waymo and Uber indicates a significant shift in the ride-hailing market with the introduction of robotaxis.</p><p class="bullet">Most relevant headline and why: "Creating opportunity at the intersection of climate disruption and regulatory change" - This highlights the growing significance of sustainability and regulatory compliance in guiding business strategies and creating new opportunities.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>INDUSTRY MOVEMENTS</h3>
+                        <div class="section-content">
+                <p class="bullet">Notable strategic shifts or industry changes: The collaboration between rival companies like Waymo and Uber indicates a trend towards partnerships for technological advancements. The potential funding review for the California Bullet Train project could have implications for infrastructure and transport projects.</p><p class="bullet">Supporting headline and why: "Waymo And Uber Team Up To Launch Robotaxis In Austin" - This demonstrates a strategic shift towards collaborations to leverage technological advancements in the transportation industry.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>EMERGING TECHNOLOGIES</h3>
+                        <div class="section-content">
+                <p class="bullet">New technologies or innovations mentioned: Brain-computer interfaces, solar geoengineering, AI 'superintelligence', and AI in education are among the emerging technologies mentioned.</p><p class="bullet">Key Innovation headline and why: "Brain-computer interfaces face a critical test" - This highlights the potential of a groundbreaking technology that could revolutionize various industries, including healthcare, and its current status in development and testing.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>STRATEGIC TAKEAWAYS</h3>
+                        <div class="section-content">
+                <p class="bullet">Important business strategy lessons: Companies are leveraging AI to broaden their customer base and improve their services. The focus on AI in education and corporate learning is also noteworthy. Moreover, the use of personal accounts for government work raises concerns about security and compliance.</p><p class="bullet">Strategic insight headline and why: "Actively AI raises $22.5M to offer sales ‘superintelligence,’ says AI SDRs failed" - This shows how companies are learning from past failures and focusing on improving their AI capabilities to achieve business growth.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>AI-Driven B2B Solutions</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Businesses across various sectors looking to leverage AI for growth.</p><p class="bullet">Implementation Timeline: 6-9 months.</p><p class="bullet">Required Resources: Skilled AI professionals, data scientists, and robust AI platform.</p><p class="bullet">Potential ROI Metrics: Increase in B2B sales, number of new partnerships, customer satisfaction scores.</p><p class="bullet">Key Success Factors: Success will depend on the level of AI integration, adaptability of the solution, and the perceived value by clients.</p><p class="bullet">Risk Mitigation Strategies: Regular market research to stay updated with AI trends, continuous product iteration based on customer feedback.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Drone Delivery Services</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: E-commerce businesses, logistic companies.</p><p class="bullet">Implementation Timeline: 9-12 months.</p><p class="bullet">Required Resources: Drone technology experts, logistics experts, drone fleet.</p><p class="bullet">Potential ROI Metrics: Decrease in delivery time, cost savings from reduced logistics overheads, increased customer satisfaction.</p><p class="bullet">Key Success Factors: Regulatory compliance, efficient logistics management, and public acceptance.</p><p class="bullet">Risk Mitigation Strategies: Regular maintenance of drones, adequate insurance, encryption for secure communication.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>3D Printed Cooling Systems</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Manufacturers of electronics and appliances.</p><p class="bullet">Implementation Timeline: 6-12 months.</p><p class="bullet">Required Resources: 3D printing technology, materials scientists, manufacturing partnership.</p><p class="bullet">Potential ROI Metrics: Reduction in manufacturing costs, increase in sales due to improved product quality.</p><p class="bullet">Key Success Factors: Quality of the cooling systems, cost-effectiveness, market acceptance.</p><p class="bullet">Risk Mitigation Strategies: Rigorous product testing, continuous research and development.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Climate & Regulatory Compliance Consultancy</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Businesses affected by climate disruption and regulatory changes.</p><p class="bullet">Implementation Timeline: 6-8 months.</p><p class="bullet">Required Resources: Experts in climate science, regulatory compliance, and environmental law.</p><p class="bullet">Potential ROI Metrics: Number of new clients, client retention rate, revenue from consultancy services.</p><p class="bullet">Key Success Factors: Expert knowledge, ability to provide practical strategies for businesses, successful case studies.</p><p class="bullet">Risk Mitigation Strategies: Continuous updating of knowledge as per the changing climate and regulatory landscape, building strong relationships with stakeholders.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Electric Vehicle Market Analysis</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Automotive manufacturers, investors in the electric vehicle market.</p><p class="bullet">Implementation Timeline: 3-6 months.</p><p class="bullet">Required Resources: Market analysts, data on the electric vehicle market.</p><p class="bullet">Potential ROI Metrics: Revenue from reports and consultancy, client acquisition and retention rate.</p><p class="bullet">Key Success Factors: Accuracy of analysis, timeliness, practical recommendations.</p><p class="bullet">Risk Mitigation Strategies: Regular updating of data, maintaining confidentiality of client information.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Robotaxi Fleet Services</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Urban commuters, tourists, and companies requiring transportation services.</p><p class="bullet">Implementation Timeline: 12 months.</p><p class="bullet">Required Resources: Fleet of self-driving cars, tech team to maintain and update autonomous systems.</p><p class="bullet">Potential ROI Metrics: Number of rides, customer satisfaction, revenue from rides.</p><p class="bullet">Key Success Factors: Regulatory compliance, safety record, customer service quality.</p><p class="bullet">Risk Mitigation Strategies: Rigorous testing of autonomous systems, emergency response plans, customer feedback mechanism.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Strategic Tech Partnership Facilitation</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Tech companies looking for strategic alliances.</p><p class="bullet">Implementation Timeline: 6-10 months.</p><p class="bullet">Required Resources: Business development team, industry connections, legal team.</p><p class="bullet">Potential ROI Metrics: Number of facilitated partnerships, revenue from facilitation fees.</p><p class="bullet">Key Success Factors: Successful matching of compatible companies, successful partnership outcomes.</p><p class="bullet">Risk Mitigation Strategies: Thorough vetting of potential partners, legal safeguards in partnership agreements.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Infrastructure Project Consultancy</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Government and private companies planning infrastructure projects.</p><p class="bullet">Implementation Timeline: 8-12 months.</p><p class="bullet">Required Resources: Infrastructure experts, financial analysts, engineers.</p><p class="bullet">Potential ROI Metrics: Revenue from consultancy fees, successful project outcomes.</p><p class="bullet">Key Success Factors: Quality of advice, successful project outcomes, client satisfaction.</p><p class="bullet">Risk Mitigation Strategies: Regular updating of industry knowledge, maintaining strong relationships with clients and stakeholders.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Autonomous Vehicle Collaboration Hub</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Autonomous vehicle companies, ride-hailing services.</p><p class="bullet">Implementation Timeline: 9-12 months.</p><p class="bullet">Required Resources: AV industry insiders, platform development team.</p><p class="bullet">Potential ROI Metrics: Number of collaborations facilitated, revenue from membership fees.</p><p class="bullet">Key Success Factors: High engagement on the platform, successful collaborations, user satisfaction.</p><p class="bullet">Risk Mitigation Strategies: Constant monitoring of industry trends, maintaining user trust and confidentiality.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Brain-Computer Interface Development</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Healthcare sector, AR/VR companies, neurotechnology research institutions.</p><p class="bullet">Implementation Timeline: 12 months.</p><p class="bullet">Required Resources: Neuroscientists, engineers, research partnership.</p><p class="bullet">Potential ROI Metrics: Investment attracted, potential patents, partnerships formed.</p><p class="bullet">Key Success Factors: Technological breakthroughs, successful tests and trials.</p><p class="bullet">Risk Mitigation Strategies: Rigorous testing, maintaining a robust intellectual property strategy.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Solar Geoengineering Solutions</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Governments, environmental organizations, energy companies.</p><p class="bullet">Implementation Timeline: 10-12 months.</p><p class="bullet">Required Resources: Climate scientists, engineers, research partnership.</p><p class="bullet">Potential ROI Metrics: Investment attracted, potential patents, partnerships formed.</p><p class="bullet">Key Success Factors: Technological breakthroughs, successful tests and trials.</p><p class="bullet">Risk Mitigation Strategies: Rigorous testing, maintaining a robust intellectual property strategy.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>AI in Education Solutions</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Educational institutions, e-learning platforms, corporate training programs.</p><p class="bullet">Implementation Timeline: 6-9 months.</p><p class="bullet">Required Resources: AI developers, educational experts, tech platform.</p><p class="bullet">Potential ROI Metrics: Number of users, revenue from subscriptions, customer satisfaction scores.</p><p class="bullet">Key Success Factors: Quality of AI integration, adaptability of the solution, market acceptance.</p><p class="bullet">Risk Mitigation Strategies: Regular market research to stay updated with AI trends, continuous product iteration based on customer feedback.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>AI-Based Sales Superintelligence Solution</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Businesses seeking AI-driven sales solutions.</p><p class="bullet">Implementation Timeline: 6-8 months.</p><p class="bullet">Required Resources: AI developers, sales experts, robust AI platform.</p><p class="bullet">Potential ROI Metrics: Increase in sales, number of new clients, customer satisfaction scores.</p><p class="bullet">Key Success Factors: Quality of AI integration, adaptability of the solution, perceived value by clients.</p><p class="bullet">Risk Mitigation Strategies: Regular market research to stay updated with AI trends, continuous product iteration based on customer feedback.</p>
+                        </div>
+                    </div>
+                
+                    <div class="section">
+                        <h3>Government Compliance Consulting</h3>
+                        <div class="section-content">
+                <p class="bullet">Target Market: Companies and government agencies requiring compliance solutions.</p><p class="bullet">Implementation Timeline: 4-6 months.</p><p class="bullet">Required Resources: Compliance experts, legal team.</p>
+                        </div>
+                    </div>
+                
+                            </div>
+                            <a href="tech_business_report_20250401_latest.html" class="cta-button">Read Today's Report</a>
+                        </div>
+                        <div class="trends-image">
+                            <img src="https://source.unsplash.com/800x600/?technology,ai" alt="Technology Trends" class="feature-image">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="archive-section">
+                    <h2>Previous Reports</h2>
+                    <div class="archive-grid">
+                        
+                        <div class="archive-card">
+                            <a href="tech_business_report_20250402_095911.html">
+                                <div class="archive-date">April 02, 2025</div>
+                                <div class="archive-title">Tech & Business Report</div>
+                            </a>
+                        </div>
+                    
+                        <div class="archive-card">
+                            <a href="tech_business_report_20250402_095154.html">
+                                <div class="archive-date">April 02, 2025</div>
+                                <div class="archive-title">Tech & Business Report</div>
+                            </a>
+                        </div>
+                    
+                        <div class="archive-card">
+                            <a href="tech_business_report_20250402_092349.html">
+                                <div class="archive-date">April 02, 2025</div>
+                                <div class="archive-title">Tech & Business Report</div>
+                            </a>
+                        </div>
+                    
+                        <div class="archive-card">
+                            <a href="tech_business_report_20250401_223040.html">
+                                <div class="archive-date">April 01, 2025</div>
+                                <div class="archive-title">Tech & Business Report</div>
+                            </a>
+                        </div>
+                    
+                        <div class="archive-card">
+                            <a href="tech_business_report_20250401_222624.html">
+                                <div class="archive-date">April 01, 2025</div>
+                                <div class="archive-title">Tech & Business Report</div>
+                            </a>
+                        </div>
+                    
+                    </div>
+                </div>
+
+                <footer class="footer">
+                    <p>Generated by TechBusinessScraperAgent on 2025-04-02 10:05:40</p>
+                </footer>
+            </div>
+        </body>
+        </html>
+        
