@@ -654,7 +654,7 @@ class TechBusinessScraperAgent:
 
     def save_and_open_report(self, html_content: str) -> None:
         """Save the HTML report and open it in the default browser."""
-        reports_dir = "tech_business_reports"
+        reports_dir = "docs"  # Changed from tech_business_reports to docs
         if not os.path.exists(reports_dir):
             os.makedirs(reports_dir)
 
@@ -663,72 +663,17 @@ class TechBusinessScraperAgent:
         if os.path.exists(font_source):
             shutil.copy2(font_source, os.path.join(reports_dir, "GelaTrialVF.ttf"))
 
+        # Save timestamped version
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{reports_dir}/tech_business_report_{timestamp}.html"
         
         with open(filename, "w", encoding="utf-8") as f:
             f.write(html_content)
 
-        # Create docs directory if it doesn't exist
-        os.makedirs("docs", exist_ok=True)
-
-        # Create index.html
-        with open("docs/index.html", "w", encoding="utf-8") as f:
-            f.write(f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEKSUM Insights</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
-            color: white;
-        }
-        .container {
-            text-align: center;
-            max-width: 600px;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>TEKSUM Insights</h1>
-        <p>Loading latest insights...</p>
-    </div>
-    <script>
-        // Get today's date in YYYYMMDD format
-        const today = new Date();
-        const dateStr = today.getFullYear() +
-            String(today.getMonth() + 1).padStart(2, '0') +
-            String(today.getDate()).padStart(2, '0');
-        
-        // Redirect to the most recent report
-        window.location.href = `tech_business_report_${dateStr}_latest.html`;
-    </script>
-</body>
-</html>
-            """)
-
-        # Add and commit the index.html
-        os.system("git add docs/index.html")
-        os.system("git commit -m 'Add index.html for GitHub Pages'")
-        os.system("git push origin main")
-
+        # Save latest version
         latest_file = f"{reports_dir}/tech_business_report_{datetime.now().strftime('%Y%m%d')}_latest.html"
-        shutil.copy2(filename, latest_file)
+        with open(latest_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
 
         webbrowser.open('file://' + os.path.abspath(filename))
 
