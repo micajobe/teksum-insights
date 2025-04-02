@@ -2,15 +2,264 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEKSUM Insights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #A78BFA;
+            --secondary-color: #F3F0FF;
+            --text-color: #1a1a1a;
+            --accent-color: #0017d3;
+            --bg-color: #FFFFFF;
+            --border-color: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .hero {
+            position: relative;
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7));
+            z-index: 2;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            max-width: 800px;
+            padding: 2rem;
+        }
+
+        .hero-title {
+            font-family: 'GelaTrialVF', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            margin: 0;
+            line-height: 1;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .trends-section {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: var(--secondary-color);
+            border-radius: 12px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .archive-section {
+            margin-top: 4rem;
+        }
+
+        .archive-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .archive-item {
+            background: var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .archive-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .archive-link {
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .archive-date {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                height: 50vh;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .trends-section {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="hero">
+        <img src="https://source.unsplash.com/1600x900/?technology,business" alt="Technology" class="hero-image">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">TEKSUM</h1>
+            <p>Daily Tech & Business Insights</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="trends-section">
+            <h2>Today's Major Technology Trends</h2>
+            <div id="trends-content">
+                Loading latest trends...
+            </div>
+            <a href="#" class="cta-button" id="latest-link">Read Today's Report</a>
+        </div>
+
+        <div class="archive-section">
+            <h2>Recent Reports</h2>
+            <ul class="archive-list" id="archive-list">
+                Loading archives...
+            </ul>
+        </div>
+    </div>
+
     <script>
-        window.location.href = 'tech_business_report_20250401_latest.html';
+        async function init() {
+            try {
+                // Get the directory listing
+                const response = await fetch('.');
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                
+                // Find all report files
+                let reports = Array.from(doc.querySelectorAll('a'))
+                    .filter(a => {
+                        const href = a.href || '';
+                        return href.includes('tech_business_report_') && !href.includes('latest');
+                    })
+                    .map(a => {
+                        const url = new URL(a.href);
+                        const filename = url.pathname.split('/').pop();
+                        return {
+                            url: filename,
+                            date: extractDateFromFilename(filename)
+                        };
+                    })
+                    .sort((a, b) => b.date - a.date);
+
+                if (reports.length > 0) {
+                    const latestReport = reports[0].url;
+                    
+                    // Fetch and parse the latest report
+                    const reportResponse = await fetch(latestReport);
+                    const reportText = await reportResponse.text();
+                    const reportDoc = parser.parseFromString(reportText, 'text/html');
+                    
+                    // Extract trends section
+                    const trendsSection = reportDoc.querySelector('.section:first-of-type');
+                    if (trendsSection) {
+                        document.getElementById('trends-content').innerHTML = trendsSection.innerHTML;
+                    }
+                    
+                    // Update latest report link
+                    document.getElementById('latest-link').href = latestReport;
+                    
+                    // Update archive list
+                    const archiveList = document.getElementById('archive-list');
+                    archiveList.innerHTML = reports.slice(0, 5)
+                        .map(report => {
+                            const formattedDate = formatDate(report.date);
+                            return `
+                                <li class="archive-item">
+                                    <a href="${report.url}" class="archive-link">
+                                        <div class="archive-date">${formattedDate}</div>
+                                        <div>Tech & Business Report</div>
+                                    </a>
+                                </li>
+                            `;
+                        })
+                        .join('');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('trends-content').innerHTML = 'Error loading trends';
+                document.getElementById('archive-list').innerHTML = 'Error loading archives';
+            }
+        }
+
+        function extractDateFromFilename(filename) {
+            const match = filename.match(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+            if (match) {
+                const [_, year, month, day, hour, minute, second] = match;
+                return new Date(year, month - 1, day, hour, minute, second);
+            }
+            return new Date(0);
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Start the initialization
+        init();
     </script>
-    <noscript>
-        <meta http-equiv="refresh" content="0;url=tech_business_report_20250401_latest.html">
-        <p>Redirecting to <a href="tech_business_report_20250401_latest.html">latest report</a>...</p>
-    </noscript>
 </body>
 </html>
