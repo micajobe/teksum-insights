@@ -1,21 +1,44 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function TestPage() {
   const [status, setStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [apiStatus, setApiStatus] = useState<string>('');
+
+  useEffect(() => {
+    // Check if the API endpoint is available
+    const checkApi = async () => {
+      try {
+        const response = await fetch('/api/generate-report');
+        const data = await response.json();
+        setApiStatus(`API Status: ${data.message || 'Unknown'}`);
+      } catch (error) {
+        console.error('Error checking API:', error);
+        setApiStatus(`API Error: ${error instanceof Error ? error.message : 'Failed to connect to API'}`);
+      }
+    };
+    
+    checkApi();
+  }, []);
 
   const generateReport = async () => {
     setLoading(true);
     setStatus('Generating report...');
     
     try {
+      console.log('Sending request to /api/generate-report');
       const response = await fetch('/api/generate-report', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (data.success) {
         setStatus('Report generated successfully!');
@@ -41,6 +64,12 @@ export default function TestPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
             TEKSUM Insights Report Generator
           </h1>
+          
+          {apiStatus && (
+            <div className="mb-4 p-2 bg-gray-200 rounded">
+              {apiStatus}
+            </div>
+          )}
           
           <button
             onClick={generateReport}
