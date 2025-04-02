@@ -48,7 +48,7 @@ export default async function Home() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-secondary rounded-xl p-8">
-              <h2 className="text-2xl font-bold mb-6">Today's Headlines</h2>
+              <h2 className="text-2xl font-bold mb-6">Today&apos;s Headlines</h2>
               <div className="space-y-4">
                 {latestReport?.headlines.map((headline, index) => (
                   <a
