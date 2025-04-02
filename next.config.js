@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  images: {
+    unoptimized: true
+  },
+  transpilePackages: ['cheerio'],
   experimental: {
-    outputFileTracingRoot: undefined,
-    outputFileTracingIncludes: {
-      '/docs/**/*': ['./docs/**/*'],
-    },
+    serverActions: true
   },
   async rewrites() {
     return [

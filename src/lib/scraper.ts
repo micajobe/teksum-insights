@@ -95,55 +95,52 @@ export class TechBusinessScraper {
   private async scrapeSite(siteName: string): Promise<Headline[]> {
     console.log(`\nAttempting to scrape ${siteName}...`);
     try {
-      const response = await axios.get(this.newsSources[siteName], {
+      const response = await fetch(this.newsSources[siteName], {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-        },
-        timeout: 10000
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
       });
-
-      console.log(`${siteName} status code: ${response.status}`);
       
-      if (response.status === 200) {
-        const $ = cheerio.load(response.data);
-        const articles: Headline[] = [];
+      if (!response.ok) {
+        console.log(`${siteName} status code: ${response.status}`);
+        return [];
+      }
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      const articles: Headline[] = [];
+      
+      $('h1, h2, h3').each((i, element) => {
+        const text = $(element).text().trim();
         
-        $('h1, h2, h3').each((i, element) => {
-          const text = $(element).text().trim();
+        if (this.isLikelyHeadline(text)) {
+          let url = '#';
+          const link = $(element).closest('a').length ? 
+            $(element).closest('a') : 
+            $(element).find('a').first() || $(element).next('a').first();
           
-          if (this.isLikelyHeadline(text)) {
-            let url = '#';
-            const link = $(element).closest('a').length ? 
-              $(element).closest('a') : 
-              $(element).find('a').first() || $(element).next('a').first();
-            
-            if (link.length && link.attr('href')) {
-              url = link.attr('href') || '#';
-              if (url.startsWith('/')) {
-                const baseUrl = new URL(this.newsSources[siteName]).origin;
-                url = `${baseUrl}${url}`;
-              } else if (!url.startsWith('http')) {
-                url = `${this.newsSources[siteName].replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
-              }
-            }
-            
-            if (!articles.some(h => h.title === text)) {
-              articles.push({
-                title: text,
-                source: siteName,
-                url
-              });
-              console.log(`Added headline from ${siteName}: ${text.substring(0, 100)}...`);
+          if (link.length && link.attr('href')) {
+            url = link.attr('href') || '#';
+            if (url.startsWith('/')) {
+              const baseUrl = new URL(this.newsSources[siteName]).origin;
+              url = `${baseUrl}${url}`;
+            } else if (!url.startsWith('http')) {
+              url = `${this.newsSources[siteName].replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
             }
           }
-        });
-        
-        return articles.slice(0, 5);
-      }
+          
+          if (!articles.some(h => h.title === text)) {
+            articles.push({
+              title: text,
+              source: siteName,
+              url
+            });
+            console.log(`Added headline from ${siteName}: ${text.substring(0, 100)}...`);
+          }
+        }
+      });
       
-      return [];
+      return articles.slice(0, 5);
     } catch (error) {
       console.error(`Error scraping ${siteName}:`, error);
       return [];

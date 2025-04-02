@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
+import fs from 'fs';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { filename: string } }
 ) {
   try {
@@ -13,14 +13,16 @@ export async function GET(
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      console.error(`File not found: ${filePath}`);
-      return new NextResponse('File not found', { status: 404 });
+      return NextResponse.json(
+        { error: 'Report not found' },
+        { status: 404 }
+      );
     }
 
     // Read the file content
     const content = fs.readFileSync(filePath, 'utf-8');
 
-    // Return the file with proper headers
+    // Return the HTML content with appropriate headers
     return new NextResponse(content, {
       headers: {
         'Content-Type': 'text/html',
@@ -29,6 +31,9 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error serving report:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 } 
