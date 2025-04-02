@@ -379,13 +379,13 @@ class TechBusinessScraperAgent:
 
             .hero-title {
                 font-family: 'GelaTrialVF', -apple-system, BlinkMacSystemFont, sans-serif;
-                font-size: 16rem;
+                font-size: clamp(4rem, 20vw, 16rem);
                 font-weight: 800;
                 color: white;
                 text-align: center;
                 margin: 0;
                 letter-spacing: -0.02em;
-                width: 80%;
+                width: 100%;
                 position: relative;
                 z-index: 2;
                 text-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -591,6 +591,10 @@ class TechBusinessScraperAgent:
             @media (max-width: 768px) {
                 .main-content {
                     grid-template-columns: 1fr;
+                }
+                .hero {
+                    min-height: 50vh;
+                    padding: 1rem;
                 }
             }
 
