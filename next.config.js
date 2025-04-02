@@ -5,7 +5,7 @@ const nextConfig = {
   },
   transpilePackages: ['cheerio'],
   experimental: {
-    serverActions: true
+    serverComponentsExternalPackages: ['undici']
   },
   async rewrites() {
     return [
