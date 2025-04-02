@@ -4,12 +4,13 @@ import fs from 'fs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  context: { params: { filename: string } }
 ) {
   try {
+    const { filename } = await context.params;
     // Get the absolute path to the docs directory
     const docsDir = path.join(process.cwd(), 'docs');
-    const filePath = path.join(docsDir, params.filename);
+    const filePath = path.join(docsDir, filename);
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {

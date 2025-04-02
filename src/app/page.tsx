@@ -11,10 +11,11 @@ async function getReports(): Promise<Report[]> {
 export default async function Home() {
   const reports = await getReports();
   const latestReport = reports[0];
+  const reportDate = latestReport?.date ? new Date(latestReport.date) : new Date();
 
   return (
     <main className="min-h-screen bg-background">
-      <Hero date={latestReport?.date} />
+      <Hero date={reportDate} />
       
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
