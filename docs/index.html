@@ -13,6 +13,15 @@
             --accent-color: #0017d3;
             --bg-color: #FFFFFF;
             --border-color: #E5E7EB;
+            --hero-bg: linear-gradient(135deg, #A78BFA 0%, #0017d3 100%);
+        }
+
+        @font-face {
+            font-family: 'GelaTrialVF';
+            src: url('GelaTrialVF.ttf') format('truetype');
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
         }
 
         body {
@@ -25,41 +34,23 @@
         }
 
         .hero {
-            position: relative;
-            height: 60vh;
+            background: var(--hero-bg);
+            min-height: 60vh;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
-            color: white;
-            text-align: center;
+            align-items: center;
+            position: relative;
             overflow: hidden;
-        }
-
-        .hero-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 1;
-        }
-
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7));
-            z-index: 2;
+            padding: 2rem;
         }
 
         .hero-content {
             position: relative;
-            z-index: 3;
+            z-index: 2;
             max-width: 800px;
             padding: 2rem;
+            text-align: center;
         }
 
         .hero-title {
@@ -67,6 +58,15 @@
             font-size: clamp(3rem, 10vw, 6rem);
             margin: 0;
             line-height: 1;
+            color: white;
+        }
+
+        .hero-date {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            color: white;
+            margin-top: 1rem;
+            opacity: 0.9;
         }
 
         .container {
@@ -136,7 +136,8 @@
 
         @media (max-width: 768px) {
             .hero {
-                height: 50vh;
+                min-height: 50vh;
+                padding: 1rem;
             }
 
             .container {
@@ -151,11 +152,9 @@
 </head>
 <body>
     <div class="hero">
-        <img src="https://source.unsplash.com/1600x900/?technology,business" alt="Technology" class="hero-image">
-        <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1 class="hero-title">TEKSUM</h1>
-            <p>Daily Tech & Business Insights</p>
+            <div class="hero-date">Daily Tech & Business Insights</div>
         </div>
     </div>
 
@@ -163,103 +162,52 @@
         <div class="trends-section">
             <h2>Today's Major Technology Trends</h2>
             <div id="trends-content">
-                Loading latest trends...
+                
+<h3>MAJOR TECHNOLOGY TRENDS</h3>
+<div class="section-content">
+<p class="bullet">Key technology developments focus on the use of Artificial Intelligence (AI) in various sectors, including B2B growth, generative AI, and AI in electronic warfare. There is also significant mention of technologies related to data privacy, AI auditing, and brain-computer interfaces.</p><p class="bullet">The most significant headline is "Unlocking profitable B2B growth through gen AI" as it highlights the potential of AI to enhance profitability in the B2B sector, indicating a growing trend of AI utilization in business operations and decision-making.</p>
+</div>
+
             </div>
-            <a href="#" class="cta-button" id="latest-link">Read Today's Report</a>
+            <a href="tech_business_report_20250401_latest.html" class="cta-button">Read Today's Report</a>
         </div>
 
         <div class="archive-section">
             <h2>Recent Reports</h2>
-            <ul class="archive-list" id="archive-list">
-                Loading archives...
+            <ul class="archive-list">
+                
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_143441.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_100540.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_095911.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_095154.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
+                    <li class="archive-item">
+                        <a href="tech_business_report_20250402_092349.html" class="archive-link">
+                            <div class="archive-date">April 02, 2025</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>
             </ul>
         </div>
     </div>
-
-    <script>
-        async function init() {
-            try {
-                // Get the directory listing
-                const response = await fetch('.');
-                const text = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                
-                // Find all report files
-                let reports = Array.from(doc.querySelectorAll('a'))
-                    .filter(a => {
-                        const href = a.href || '';
-                        return href.includes('tech_business_report_') && !href.includes('latest');
-                    })
-                    .map(a => {
-                        const url = new URL(a.href);
-                        const filename = url.pathname.split('/').pop();
-                        return {
-                            url: filename,
-                            date: extractDateFromFilename(filename)
-                        };
-                    })
-                    .sort((a, b) => b.date - a.date);
-
-                if (reports.length > 0) {
-                    const latestReport = reports[0].url;
-                    
-                    // Fetch and parse the latest report
-                    const reportResponse = await fetch(latestReport);
-                    const reportText = await reportResponse.text();
-                    const reportDoc = parser.parseFromString(reportText, 'text/html');
-                    
-                    // Extract trends section
-                    const trendsSection = reportDoc.querySelector('.section:first-of-type');
-                    if (trendsSection) {
-                        document.getElementById('trends-content').innerHTML = trendsSection.innerHTML;
-                    }
-                    
-                    // Update latest report link
-                    document.getElementById('latest-link').href = latestReport;
-                    
-                    // Update archive list
-                    const archiveList = document.getElementById('archive-list');
-                    archiveList.innerHTML = reports.slice(0, 5)
-                        .map(report => {
-                            const formattedDate = formatDate(report.date);
-                            return `
-                                <li class="archive-item">
-                                    <a href="${report.url}" class="archive-link">
-                                        <div class="archive-date">${formattedDate}</div>
-                                        <div>Tech & Business Report</div>
-                                    </a>
-                                </li>
-                            `;
-                        })
-                        .join('');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('trends-content').innerHTML = 'Error loading trends';
-                document.getElementById('archive-list').innerHTML = 'Error loading archives';
-            }
-        }
-
-        function extractDateFromFilename(filename) {
-            const match = filename.match(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
-            if (match) {
-                const [_, year, month, day, hour, minute, second] = match;
-                return new Date(year, month - 1, day, hour, minute, second);
-            }
-            return new Date(0);
-        }
-
-        function formatDate(date) {
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
-
-        // Start the initialization
-        init();
-    </script>
 </body>
 </html>

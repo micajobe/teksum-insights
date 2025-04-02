@@ -672,6 +672,31 @@ class TechBusinessScraperAgent:
                     grid-template-columns: 1fr;
                 }
             }
+
+            .trends-grid {
+                display: grid;
+                grid-template-columns: 3fr 2fr;
+                gap: 2rem;
+                align-items: start;
+            }
+
+            .feature-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+
+            @media (max-width: 768px) {
+                .trends-grid {
+                    grid-template-columns: 1fr;
+                }
+                
+                .trends-image {
+                    margin-top: 2rem;
+                }
+            }
         """
 
         html_template = f"""
@@ -688,24 +713,19 @@ class TechBusinessScraperAgent:
         </head>
         <body>
             <div class="hero">
-                <h1 class="hero-title">TEKSUM</h1>
-                <div class="hero-date">{datetime.now().strftime('%B %d, %Y')}</div>
-                <div class="floating-images">
-                    <div class="floating-image" style="top: 10%; left: 10%; transform: rotate(-15deg);"></div>
-                    <div class="floating-image" style="top: 20%; right: 15%; transform: rotate(10deg);"></div>
-                    <div class="floating-image" style="bottom: 15%; left: 20%; transform: rotate(5deg);"></div>
-                    <div class="floating-image" style="bottom: 25%; right: 25%; transform: rotate(-8deg);"></div>
+                <div class="hero-content">
+                    <h1 class="hero-title">TEKSUM</h1>
+                    <div class="hero-date">{datetime.now().strftime('%B %d, %Y')}</div>
                 </div>
             </div>
 
             <div class="container">
                 <div class="main-content">
-                    <main class="summary-section">
+                    <div class="summary-section">
                         {self.clean_markdown(summary)}
-                    </main>
-
+                    </div>
                     <aside class="headlines-sidebar">
-                        <h2>Latest Headlines</h2>
+                        <h2>Today's Headlines</h2>
                         {headlines_html}
                     </aside>
                 </div>
@@ -738,6 +758,20 @@ class TechBusinessScraperAgent:
         if os.path.exists(font_source):
             shutil.copy2(font_source, os.path.join(reports_dir, "GelaTrialVF.ttf"))
 
+        # Check for and remove existing reports from today
+        today = datetime.now().strftime("%Y%m%d")
+        existing_reports = [f for f in os.listdir(reports_dir) 
+                          if f.startswith(f'tech_business_report_{today}_') 
+                          and f.endswith('.html')]
+        
+        # Remove existing reports from today
+        for report in existing_reports:
+            try:
+                os.remove(os.path.join(reports_dir, report))
+                print(f"Removed existing report: {report}")
+            except Exception as e:
+                print(f"Error removing existing report {report}: {str(e)}")
+
         # Save timestamped version
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{reports_dir}/tech_business_report_{timestamp}.html"
@@ -746,11 +780,240 @@ class TechBusinessScraperAgent:
             f.write(html_content)
 
         # Save latest version
-        latest_file = f"{reports_dir}/tech_business_report_{datetime.now().strftime('%Y%m%d')}_latest.html"
+        latest_file = f"{reports_dir}/tech_business_report_{today}_latest.html"
         with open(latest_file, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         webbrowser.open('file://' + os.path.abspath(filename))
+
+        self.update_index_html()
+
+    def update_index_html(self) -> None:
+        """Update index.html with latest report content."""
+        reports_dir = "docs"
+        
+        # Get all report files except latest
+        report_files = [f for f in os.listdir(reports_dir) 
+                       if f.startswith('tech_business_report_') 
+                       and f.endswith('.html')
+                       and not f.endswith('_latest.html')]
+        
+        # Sort by date (newest first)
+        report_files.sort(reverse=True)
+        
+        # Get latest report content
+        latest_report = os.path.join(reports_dir, "tech_business_report_20250401_latest.html")
+        with open(latest_report, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Parse the HTML to extract trends section
+        soup = BeautifulSoup(content, 'html.parser')
+        trends_section = soup.find('h3', string='MAJOR TECHNOLOGY TRENDS')
+        if trends_section:
+            trends_content = trends_section.find_parent('div').decode_contents()
+        else:
+            trends_content = "<p>Error loading trends</p>"
+        
+        # Generate archive items HTML
+        archive_items = ""
+        for i, report in enumerate(report_files[:5]):
+            date_str = report.split('_')[3]  # Gets '20250401'
+            date = datetime.strptime(date_str, '%Y%m%d')
+            formatted_date = date.strftime('%B %d, %Y')
+            
+            archive_items += f"""
+                    <li class="archive-item">
+                        <a href="{report}" class="archive-link">
+                            <div class="archive-date">{formatted_date}</div>
+                            <div>Tech & Business Report</div>
+                        </a>
+                    </li>"""
+        
+        # Create index.html content
+        index_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEKSUM Insights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {{
+            --primary-color: #A78BFA;
+            --secondary-color: #F3F0FF;
+            --text-color: #1a1a1a;
+            --accent-color: #0017d3;
+            --bg-color: #FFFFFF;
+            --border-color: #E5E7EB;
+            --hero-bg: linear-gradient(135deg, #A78BFA 0%, #0017d3 100%);
+        }}
+
+        @font-face {{
+            font-family: 'GelaTrialVF';
+            src: url('GelaTrialVF.ttf') format('truetype');
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+        }}
+
+        body {{
+            font-family: 'Libre Baskerville', Georgia, serif;
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }}
+
+        .hero {{
+            background: var(--hero-bg);
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+        }}
+
+        .hero-content {{
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 2rem;
+            text-align: center;
+        }}
+
+        .hero-title {{
+            font-family: 'GelaTrialVF', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            margin: 0;
+            line-height: 1;
+            color: white;
+        }}
+
+        .hero-date {{
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            color: white;
+            margin-top: 1rem;
+            opacity: 0.9;
+        }}
+
+        .container {{
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 2rem;
+        }}
+
+        .trends-section {{
+            margin: 3rem 0;
+            padding: 2rem;
+            background: var(--secondary-color);
+            border-radius: 12px;
+        }}
+
+        .cta-button {{
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: transform 0.2s ease;
+        }}
+
+        .cta-button:hover {{
+            transform: translateY(-2px);
+        }}
+
+        .archive-section {{
+            margin-top: 4rem;
+        }}
+
+        .archive-list {{
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }}
+
+        .archive-item {{
+            background: var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }}
+
+        .archive-item:hover {{
+            transform: translateY(-3px);
+        }}
+
+        .archive-link {{
+            text-decoration: none;
+            color: var(--text-color);
+        }}
+
+        .archive-date {{
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }}
+
+        @media (max-width: 768px) {{
+            .hero {{
+                min-height: 50vh;
+                padding: 1rem;
+            }}
+
+            .container {{
+                padding: 1rem;
+            }}
+
+            .trends-section {{
+                padding: 1.5rem;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">TEKSUM</h1>
+            <div class="hero-date">Daily Tech & Business Insights</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="trends-section">
+            <h2>Today's Major Technology Trends</h2>
+            <div id="trends-content">
+                {trends_content}
+            </div>
+            <a href="tech_business_report_{datetime.now().strftime('%Y%m%d')}_latest.html" class="cta-button">Read Today's Report</a>
+        </div>
+
+        <div class="archive-section">
+            <h2>Recent Reports</h2>
+            <ul class="archive-list">
+                {archive_items}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        
+        # Write the updated index.html
+        index_path = os.path.join(reports_dir, "index.html")
+        with open(index_path, 'w', encoding='utf-8') as f:
+            f.write(index_html)
 
     def summarize_insights(self) -> dict:
         """Use ChatGPT to summarize tech and business insights."""
