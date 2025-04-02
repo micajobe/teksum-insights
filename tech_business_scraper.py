@@ -350,10 +350,10 @@ class TechBusinessScraperAgent:
                 --primary-color: #A78BFA;
                 --secondary-color: #F3F0FF;
                 --text-color: #1a1a1a;
-                --accent-color: #7C3AED;
+                --accent-color: #0017d3;
                 --bg-color: #FFFFFF;
                 --border-color: #E5E7EB;
-                --hero-bg: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
+                --hero-bg: linear-gradient(135deg, #A78BFA 0%, #0017d3 100%);
             }
 
             body {
