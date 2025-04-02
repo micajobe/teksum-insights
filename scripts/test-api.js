@@ -35,7 +35,7 @@ async function testEndpoint(endpoint, method = 'GET') {
     } else {
       const text = await response.text();
       console.log('Response (Text):', text.substring(0, 200) + (text.length > 200 ? '...' : ''));
-      return { success: false, error: 'Response is not JSON' };
+      return { success: true, text };
     }
   } catch (error) {
     console.error('Error:', error.message);
@@ -78,6 +78,37 @@ function testFileSystem() {
   }
 }
 
+// Test report endpoints
+async function testReportEndpoints() {
+  console.log('\nTesting report endpoints...');
+  
+  try {
+    // First check if the report exists
+    const checkResult = await testEndpoint('/api/reports/check?filename=tech_business_report_20250402_latest.html');
+    
+    if (checkResult.success && checkResult.data && checkResult.data.exists) {
+      console.log('Report exists, trying to fetch it...');
+      
+      // Try to fetch the report
+      const reportResult = await testEndpoint('/api/reports/tech_business_report_20250402_latest.html');
+      
+      if (reportResult.success) {
+        console.log('Successfully fetched report');
+        return { success: true, checkResult, reportResult };
+      } else {
+        console.error('Failed to fetch report:', reportResult.error);
+        return { success: false, checkResult, error: reportResult.error };
+      }
+    } else {
+      console.log('Report does not exist or check failed');
+      return { success: false, checkResult };
+    }
+  } catch (error) {
+    console.error('Error testing report endpoints:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // Main test function
 async function runTests() {
   console.log('Starting API tests...');
@@ -90,6 +121,9 @@ async function runTests() {
   for (const endpoint of API_ENDPOINTS) {
     await testEndpoint(endpoint);
   }
+  
+  // Test report endpoints
+  await testReportEndpoints();
   
   // Test POST to generate-report
   await testEndpoint('/api/generate-report', 'POST');

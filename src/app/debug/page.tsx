@@ -7,6 +7,7 @@ export default function DebugPage() {
   const [reportStatus, setReportStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [reportContent, setReportContent] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if the API endpoint is available
@@ -28,21 +29,43 @@ export default function DebugPage() {
   const checkReport = async () => {
     setLoading(true);
     setReportStatus('Checking report...');
+    setReportContent(null);
     
     try {
-      // Use the new check endpoint instead of directly accessing the report
-      const response = await fetch('/api/reports/check?filename=tech_business_report_20250402_latest.html');
-      const data = await response.json();
+      // First check if the report exists using the check endpoint
+      const checkResponse = await fetch('/api/reports/check?filename=tech_business_report_20250402_latest.html');
+      const checkData = await checkResponse.json();
       
-      console.log('Report check data:', data);
+      console.log('Report check data:', checkData);
       
-      if (data.exists) {
-        setReportStatus(`Report Status: Found (${data.size} bytes, modified ${new Date(data.modified).toLocaleString()})`);
+      if (checkData.exists) {
+        setReportStatus(`Report Status: Found (${checkData.size} bytes, modified ${new Date(checkData.modified).toLocaleString()})`);
+        
+        // Now try to fetch the actual report content
+        try {
+          const reportResponse = await fetch('/api/reports/tech_business_report_20250402_latest.html');
+          const contentType = reportResponse.headers.get('content-type');
+          
+          if (contentType && contentType.includes('application/json')) {
+            // Handle JSON response
+            const reportData = await reportResponse.json();
+            console.log('Report data (JSON):', reportData);
+            setDebugInfo(reportData);
+          } else {
+            // Handle HTML or other text response
+            const reportText = await reportResponse.text();
+            console.log('Report content length:', reportText.length);
+            setReportContent(reportText.substring(0, 500) + (reportText.length > 500 ? '...' : ''));
+          }
+        } catch (reportError) {
+          console.error('Error fetching report content:', reportError);
+          setReportStatus(`Report Status: Found but error fetching content: ${reportError instanceof Error ? reportError.message : 'Unknown error'}`);
+        }
       } else {
-        setReportStatus(`Report Status: Not found (${data.error || 'Unknown error'})`);
+        setReportStatus(`Report Status: Not found (${checkData.error || 'Unknown error'})`);
       }
       
-      setDebugInfo(data);
+      setDebugInfo(checkData);
     } catch (error) {
       console.error('Error checking report:', error);
       setReportStatus(`Report Error: ${error instanceof Error ? error.message : 'Failed to check report'}`);
@@ -54,6 +77,7 @@ export default function DebugPage() {
   const generateReport = async () => {
     setLoading(true);
     setReportStatus('Generating report...');
+    setReportContent(null);
     
     try {
       console.log('Sending request to /api/generate-report');
@@ -126,11 +150,20 @@ export default function DebugPage() {
           </div>
           
           {debugInfo && (
-            <div className="bg-white p-4 rounded shadow text-left overflow-auto max-h-96">
+            <div className="bg-white p-4 rounded shadow text-left overflow-auto max-h-96 mb-8">
               <h2 className="text-xl font-semibold mb-2">Debug Information</h2>
               <pre className="text-xs bg-gray-100 p-2 rounded">
                 {JSON.stringify(debugInfo, null, 2)}
               </pre>
+            </div>
+          )}
+          
+          {reportContent && (
+            <div className="bg-white p-4 rounded shadow text-left overflow-auto max-h-96">
+              <h2 className="text-xl font-semibold mb-2">Report Content Preview</h2>
+              <div className="text-xs bg-gray-100 p-2 rounded whitespace-pre-wrap">
+                {reportContent}
+              </div>
             </div>
           )}
         </div>
