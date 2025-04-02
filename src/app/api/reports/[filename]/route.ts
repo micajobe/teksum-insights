@@ -61,13 +61,33 @@ export async function GET(
     const content = fs.readFileSync(filePath, 'utf-8');
     console.log('File content length:', content.length);
 
-    // Return the HTML content with appropriate headers
-    return new NextResponse(content, {
-      headers: {
-        'Content-Type': 'text/html',
-        'Cache-Control': 'public, max-age=3600, must-revalidate',
-      },
-    });
+    // Check if the file is HTML
+    const isHtml = content.trim().toLowerCase().startsWith('<!doctype html') || 
+                   content.trim().toLowerCase().startsWith('<html');
+    
+    if (isHtml) {
+      // Return the HTML content with appropriate headers
+      return new NextResponse(content, {
+        headers: {
+          'Content-Type': 'text/html',
+          'Cache-Control': 'public, max-age=3600, must-revalidate',
+        },
+      });
+    } else {
+      // If not HTML, return as JSON
+      return NextResponse.json(
+        { 
+          content,
+          filename,
+          contentType: 'text/plain',
+        },
+        {
+          headers: {
+            'Cache-Control': 'public, max-age=3600, must-revalidate',
+          },
+        }
+      );
+    }
   } catch (error) {
     console.error('Error serving report:', error);
     return NextResponse.json(
