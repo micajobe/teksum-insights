@@ -379,7 +379,7 @@ class TechBusinessScraperAgent:
 
             .hero-title {
                 font-family: 'GelaTrialVF', -apple-system, BlinkMacSystemFont, sans-serif;
-                font-size: clamp(4rem, 20vw, 16rem);
+                font-size: min(16rem, 25vw);
                 font-weight: 800;
                 color: white;
                 text-align: center;
@@ -390,6 +390,7 @@ class TechBusinessScraperAgent:
                 z-index: 2;
                 text-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 line-height: 0.9;
+                padding: 0 1rem;
             }
 
             .hero-date {
@@ -595,6 +596,10 @@ class TechBusinessScraperAgent:
                 .hero {
                     min-height: 50vh;
                     padding: 1rem;
+                }
+                .hero-title {
+                    font-size: min(8rem, 20vw);
+                    line-height: 1;
                 }
             }
 
