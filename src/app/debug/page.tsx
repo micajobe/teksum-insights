@@ -9,6 +9,7 @@ export default function DebugPage() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [rawResponse, setRawResponse] = useState<string>('');
 
   useEffect(() => {
     checkApi();
@@ -17,8 +18,22 @@ export default function DebugPage() {
   const checkApi = async () => {
     try {
       setApiStatus('Checking...');
+      setError(null);
+      setRawResponse('');
+      
       const response = await fetch('/api/generate-report');
-      const data = await response.json();
+      const responseText = await response.text();
+      setRawResponse(responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        setApiStatus(`API error: Invalid JSON response`);
+        setError(`The API returned invalid JSON: ${responseText.substring(0, 100)}...`);
+        return;
+      }
       
       if (data.success) {
         setApiStatus('API is working');
@@ -26,9 +41,11 @@ export default function DebugPage() {
       } else {
         setApiStatus(`API error: ${data.error}`);
         setDebugInfo(data.environment);
+        setError(data.error);
       }
     } catch (error) {
       setApiStatus(`API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setError(error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -36,6 +53,7 @@ export default function DebugPage() {
     try {
       setIsLoading(true);
       setError(null);
+      setRawResponse('');
       setReportStatus('Generating report...');
       
       const response = await fetch('/api/generate-report', {
@@ -45,7 +63,19 @@ export default function DebugPage() {
         },
       });
       
-      const data = await response.json();
+      const responseText = await response.text();
+      setRawResponse(responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        setReportStatus(`Error: Invalid JSON response`);
+        setError(`The API returned invalid JSON: ${responseText.substring(0, 100)}...`);
+        setIsLoading(false);
+        return;
+      }
       
       if (data.success) {
         setReportStatus('Report generated successfully');
@@ -56,6 +86,7 @@ export default function DebugPage() {
       } else {
         setReportStatus(`Error: ${data.error}`);
         setDebugInfo(data.environment);
+        setError(data.error);
       }
     } catch (error) {
       setReportStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -96,6 +127,15 @@ export default function DebugPage() {
         <div className="bg-red-100 p-4 rounded mb-4">
           <h2 className="text-xl font-semibold mb-2">Error</h2>
           <p className="text-red-700">{error}</p>
+        </div>
+      )}
+      
+      {rawResponse && (
+        <div className="bg-gray-100 p-4 rounded mb-4">
+          <h2 className="text-xl font-semibold mb-2">Raw API Response</h2>
+          <pre className="bg-gray-200 p-2 rounded overflow-auto max-h-60 text-xs">
+            {rawResponse}
+          </pre>
         </div>
       )}
       

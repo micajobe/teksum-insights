@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TechBusinessScraper } from '../scraper';
 
+// Helper function to ensure JSON responses
+function jsonResponse(data: any, status: number = 200) {
+  return NextResponse.json(data, { 
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
+      return jsonResponse(
         { 
           success: false, 
           error: 'OpenAI API key is not configured',
@@ -17,11 +27,11 @@ export async function GET(request: NextRequest) {
             region: process.env.VERCEL_REGION,
           }
         },
-        { status: 500 }
+        500
       );
     }
 
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       message: 'Report generation endpoint is active. Use POST to generate a report.',
       environment: {
@@ -34,7 +44,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in GET /api/generate-report:', error);
-    return NextResponse.json(
+    return jsonResponse(
       { 
         success: false, 
         error: error instanceof Error ? error.message : 'An unexpected error occurred',
@@ -45,7 +55,7 @@ export async function GET(request: NextRequest) {
           region: process.env.VERCEL_REGION,
         }
       },
-      { status: 500 }
+      500
     );
   }
 }
@@ -61,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
       console.error('OpenAI API key is not configured');
-      return NextResponse.json(
+      return jsonResponse(
         { 
           success: false, 
           error: 'OpenAI API key is not configured',
@@ -73,7 +83,7 @@ export async function POST(request: NextRequest) {
             region: process.env.VERCEL_REGION,
           }
         },
-        { status: 500 }
+        500
       );
     }
 
@@ -86,7 +96,7 @@ export async function POST(request: NextRequest) {
     
     if (!result.success) {
       console.error('Scraper failed:', result.error);
-      return NextResponse.json(
+      return jsonResponse(
         { 
           success: false, 
           error: result.error || 'Failed to generate report',
@@ -97,14 +107,14 @@ export async function POST(request: NextRequest) {
             region: process.env.VERCEL_REGION,
           }
         },
-        { status: 500 }
+        500
       );
     }
     
     console.log('Report generated successfully');
     
     // Return the report content directly
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       message: 'Report generated successfully',
       report: result.data?.report,
@@ -118,7 +128,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in POST /api/generate-report:', error);
-    return NextResponse.json(
+    return jsonResponse(
       { 
         success: false, 
         error: error instanceof Error ? error.message : 'An unexpected error occurred',
@@ -129,7 +139,7 @@ export async function POST(request: NextRequest) {
           region: process.env.VERCEL_REGION,
         }
       },
-      { status: 500 }
+      500
     );
   }
 } 
