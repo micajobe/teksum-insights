@@ -21,5 +21,13 @@
       "path": "/api/generate-report",
       "schedule": "0 0 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/generate-report": {
+      "maxDuration": 60
+    },
+    "api/reports/*": {
+      "maxDuration": 10
+    }
+  }
 } 

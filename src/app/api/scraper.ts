@@ -18,29 +18,36 @@ interface ScraperResult {
 export class TechBusinessScraper {
   private readonly docsDir: string;
   private readonly openai: OpenAI;
-  private readonly newsSources: Record<string, string>;
+  private readonly newsSources: Record<string, string> = {
+    'TechCrunch': 'https://techcrunch.com',
+    'VentureBeat': 'https://venturebeat.com',
+    'McKinsey': 'https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights'
+  };
 
   constructor() {
-    this.docsDir = path.join(process.cwd(), 'docs');
-    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
-    if (!fs.existsSync(this.docsDir)) {
-      fs.mkdirSync(this.docsDir, { recursive: true });
+    // Initialize OpenAI client
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured');
     }
-
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
-    this.newsSources = {
-      'McKinsey': 'https://www.mckinsey.com/insights',
-      'Deloitte': 'https://www2.deloitte.com/us/en/insights/topics/digital-transformation.html',
-      'Forbes Tech': 'https://www.forbes.com/technology/',
-      'Wired': 'https://www.wired.com/tag/business/',
-      'MIT Tech Review': 'https://www.technologyreview.com/',
-      'Harvard Business Review': 'https://hbr.org/topic/technology',
-      'TechCrunch': 'https://techcrunch.com',
-      'VentureBeat': 'https://venturebeat.com'
-    };
+    // Set up the directory for saving reports
+    this.docsDir = path.join(process.cwd(), 'docs');
+    console.log('Docs directory:', this.docsDir);
+    
+    // Create the docs directory if it doesn't exist
+    if (!fs.existsSync(this.docsDir)) {
+      console.log('Creating docs directory...');
+      try {
+        fs.mkdirSync(this.docsDir, { recursive: true });
+        console.log('Docs directory created successfully');
+      } catch (error) {
+        console.error('Error creating docs directory:', error);
+        // Continue anyway, as the directory might already exist in production
+      }
+    }
   }
 
   async run(): Promise<ScraperResult> {
@@ -82,14 +89,33 @@ export class TechBusinessScraper {
     }
   }
 
-  private isLikelyHeadline(text: string): boolean {
-    if (!text || text.length < 20 || text.length > 200) {
-      return false;
+  private async fetchHeadlines(): Promise<Headline[]> {
+    console.log('Fetching headlines from news sources...');
+    const allHeadlines: Headline[] = [];
+    
+    // Use Promise.all to fetch from all sources concurrently
+    const sourcePromises = Object.keys(this.newsSources).map(siteName => 
+      this.scrapeSite(siteName)
+        .catch(error => {
+          console.error(`Error scraping ${siteName}:`, error);
+          return [];
+        })
+    );
+    
+    const results = await Promise.all(sourcePromises);
+    
+    // Flatten the results
+    results.forEach(headlines => {
+      allHeadlines.push(...headlines);
+    });
+    
+    console.log(`Total headlines collected: ${allHeadlines.length}`);
+    if (allHeadlines.length > 0) {
+      console.log('Sample headlines:');
+      allHeadlines.slice(0, 5).forEach(h => console.log(`- ${h.title} (${h.source})`));
     }
-
-    const skipPhrases = ['subscribe', 'sign up', 'login', 'sign in', 'menu', 
-                        'search', 'newsletter', 'download', 'follow us'];
-    return !skipPhrases.some(phrase => text.toLowerCase().includes(phrase));
+    
+    return allHeadlines;
   }
 
   private async scrapeSite(siteName: string): Promise<Headline[]> {
@@ -147,36 +173,16 @@ export class TechBusinessScraper {
     }
   }
 
-  private async fetchHeadlines(): Promise<Headline[]> {
-    console.log('\nCollecting headlines from all sources...');
-    const headlines: Headline[] = [];
-    
-    for (const siteName of Object.keys(this.newsSources)) {
-      try {
-        const sourceHeadlines = await this.scrapeSite(siteName);
-        headlines.push(...sourceHeadlines);
-        // Add a small delay between requests
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
-      } catch (error) {
-        console.error(`Error with ${siteName}:`, error);
-      }
-    }
-
-    console.log(`\nTotal headlines collected: ${headlines.length}`);
-    if (headlines.length > 0) {
-      console.log('\nSample headlines:');
-      headlines.slice(0, 5).forEach(headline => {
-        console.log(`- ${headline.title} (${headline.source})`);
-      });
-    }
-
-    return headlines;
+  private isLikelyHeadline(text: string): boolean {
+    // Filter out navigation items, footers, etc.
+    if (text.length < 10 || text.length > 200) return false;
+    if (text.toLowerCase().includes('menu') || text.toLowerCase().includes('search')) return false;
+    if (text.match(/^\d+\.\s+/)) return false; // Numbered lists
+    return true;
   }
 
   private formatHeadlinesForPrompt(headlines: Headline[]): string {
-    return headlines.map(h => 
-      `Source: ${h.source}\nHeadline: ${h.title}\n`
-    ).join('\n');
+    return headlines.map(h => `- ${h.title} (${h.source})`).join('\n');
   }
 
   private async analyzeHeadlines(headlines: Headline[]): Promise<ReportSection[]> {
@@ -230,79 +236,95 @@ export class TechBusinessScraper {
     }
   }
 
-  private parseAnalysis(analysisText: string): ReportSection[] {
+  private parseAnalysis(text: string): ReportSection[] {
     const sections: ReportSection[] = [];
-    const sectionTitles = [
-      'MAJOR TECHNOLOGY TRENDS',
-      'BUSINESS IMPLICATIONS',
-      'EMERGING OPPORTUNITIES'
-    ];
-
+    const lines = text.split('\n');
+    
     let currentSection: ReportSection | null = null;
-    const lines = analysisText.split('\n');
-
+    let currentContent: string[] = [];
+    
     for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      // Check if this line is a section title
-      const sectionTitle = sectionTitles.find(title => 
-        trimmedLine.toUpperCase().includes(title)
-      );
-      
-      if (sectionTitle) {
-        // If we have a previous section, add it to the sections array
+      // Check if this is a section header
+      if (line.match(/^\d+\.\s+[A-Z\s]+:/) || line.match(/^[A-Z\s]+:/)) {
+        // Save the previous section if it exists
         if (currentSection) {
+          currentSection.content = currentContent;
           sections.push(currentSection);
         }
         
         // Start a new section
-        currentSection = {
-          title: sectionTitle,
-          content: []
-        };
-      } else if (currentSection && trimmedLine) {
+        const title = line.replace(/^\d+\.\s+/, '').replace(':', '').trim();
+        currentSection = { title, content: [] };
+        currentContent = [];
+      } else if (currentSection && line.trim()) {
         // Add content to the current section
-        if (trimmedLine.startsWith('•')) {
-          currentSection.content.push(trimmedLine.substring(1).trim());
-        } else {
-          currentSection.content.push(trimmedLine);
-        }
+        currentContent.push(line.trim());
       }
     }
     
-    // Add the last section if there is one
+    // Add the last section
     if (currentSection) {
+      currentSection.content = currentContent;
       sections.push(currentSection);
     }
     
     return sections;
   }
 
-  private createReport(headlines: Headline[], analysis: ReportSection[]): Report {
+  private createReport(headlines: Headline[], sections: ReportSection[]): Report {
     const now = new Date();
-    const dateStr = format(now, 'yyyyMMdd');
+    const id = format(now, 'yyyyMMdd_HHmmss');
     
     return {
-      id: `tech_business_report_${dateStr}`,
-      date: now.toISOString(),
+      id,
+      date: format(now, 'yyyy-MM-dd'),
       headlines,
-      sections: analysis,
-      summary: `Tech Business Report for ${format(now, 'MMMM d, yyyy')}`
+      sections,
+      summary: sections.map(s => s.title).join(', ')
     };
   }
 
   private async saveReport(report: Report): Promise<void> {
-    const html = this.generateHtmlReport(report);
-    const filename = `${report.id}_latest.html`;
-    const filePath = path.join(this.docsDir, filename);
-    
-    fs.writeFileSync(filePath, html);
-    console.log(`Report saved to ${filePath}`);
+    try {
+      // Create the HTML content
+      const htmlContent = this.generateHtmlReport(report);
+      
+      // Save the report to a file
+      const filename = `tech_business_report_${report.id}.html`;
+      const latestFilename = 'tech_business_report_latest.html';
+      const filePath = path.join(this.docsDir, filename);
+      const latestFilePath = path.join(this.docsDir, latestFilename);
+      
+      console.log(`Saving report to ${filePath}`);
+      fs.writeFileSync(filePath, htmlContent);
+      
+      // Also save as the latest version
+      console.log(`Saving latest report to ${latestFilePath}`);
+      fs.writeFileSync(latestFilePath, htmlContent);
+      
+      console.log('Report saved successfully');
+    } catch (error) {
+      console.error('Error saving report:', error);
+      throw error;
+    }
   }
 
   private generateHtmlReport(report: Report): string {
-    const date = new Date(report.date);
-    const formattedDate = format(date, 'MMMM d, yyyy');
+    const sectionsHtml = report.sections.map(section => `
+      <div class="section">
+        <h2>${section.title}</h2>
+        <div class="content">
+          ${section.content.map(item => `<p>${item}</p>`).join('\n')}
+        </div>
+      </div>
+    `).join('\n');
+    
+    const headlinesHtml = report.headlines.map(headline => `
+      <div class="headline">
+        <h3>${headline.title}</h3>
+        <p class="source">Source: <a href="${headline.url}" target="_blank">${headline.source}</a></p>
+      </div>
+    `).join('\n');
     
     return `
       <!DOCTYPE html>
@@ -310,7 +332,7 @@ export class TechBusinessScraper {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${report.summary}</title>
+        <title>Tech Business Report - ${report.date}</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -320,74 +342,55 @@ export class TechBusinessScraper {
             margin: 0 auto;
             padding: 20px;
           }
-          h1, h2 {
+          h1, h2, h3 {
             color: #2c3e50;
           }
-          .date {
-            color: #7f8c8d;
-            font-style: italic;
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+          }
+          .section {
+            margin-bottom: 30px;
           }
           .headlines {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
           }
           .headline {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f5f5f5;
           }
-          .headline a {
+          .source {
+            font-size: 0.9em;
+            color: #666;
+          }
+          a {
             color: #3498db;
             text-decoration: none;
           }
-          .headline a:hover {
+          a:hover {
             text-decoration: underline;
-          }
-          .source {
-            font-size: 0.8em;
-            color: #7f8c8d;
-          }
-          .section {
-            margin: 30px 0;
-          }
-          .section-title {
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-          }
-          .section-content {
-            margin-left: 20px;
-          }
-          .section-content p {
-            margin: 10px 0;
           }
         </style>
       </head>
       <body>
-        <h1>${report.summary}</h1>
-        <p class="date">Generated on ${formattedDate}</p>
-        
-        <div class="headlines">
-          <h2>Recent Headlines</h2>
-          ${report.headlines.map(h => `
-            <div class="headline">
-              <a href="${h.url}" target="_blank">${h.title}</a>
-              <div class="source">Source: ${h.source}</div>
-            </div>
-          `).join('')}
+        <div class="header">
+          <h1>Tech Business Report</h1>
+          <p>Generated on ${report.date}</p>
         </div>
         
-        ${report.sections.map(section => `
-          <div class="section">
-            <h2 class="section-title">${section.title}</h2>
-            <div class="section-content">
-              ${section.content.map(content => `<p>${content}</p>`).join('')}
-            </div>
-          </div>
-        `).join('')}
+        <div class="sections">
+          ${sectionsHtml}
+        </div>
         
-        <footer>
-          <p>Generated by TEKSUM Insights</p>
-        </footer>
+        <div class="headlines">
+          <h2>Headlines Analyzed</h2>
+          ${headlinesHtml}
+        </div>
       </body>
       </html>
     `;

@@ -13,6 +13,8 @@ export async function GET(request: NextRequest) {
             nodeEnv: process.env.NODE_ENV,
             hasOpenAIKey: false,
             isVercel: !!process.env.VERCEL,
+            vercelEnv: process.env.VERCEL_ENV,
+            region: process.env.VERCEL_REGION,
           }
         },
         { status: 500 }
@@ -26,6 +28,8 @@ export async function GET(request: NextRequest) {
         nodeEnv: process.env.NODE_ENV,
         hasOpenAIKey: true,
         isVercel: !!process.env.VERCEL,
+        vercelEnv: process.env.VERCEL_ENV,
+        region: process.env.VERCEL_REGION,
       }
     });
   } catch (error) {
@@ -37,6 +41,8 @@ export async function GET(request: NextRequest) {
         environment: {
           nodeEnv: process.env.NODE_ENV,
           isVercel: !!process.env.VERCEL,
+          vercelEnv: process.env.VERCEL_ENV,
+          region: process.env.VERCEL_REGION,
         }
       },
       { status: 500 }
@@ -49,6 +55,8 @@ export async function POST(request: NextRequest) {
     console.log('POST request to /api/generate-report');
     console.log('Environment:', process.env.NODE_ENV);
     console.log('Is Vercel:', !!process.env.VERCEL);
+    console.log('Vercel Environment:', process.env.VERCEL_ENV);
+    console.log('Vercel Region:', process.env.VERCEL_REGION);
     
     // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
@@ -61,6 +69,8 @@ export async function POST(request: NextRequest) {
             nodeEnv: process.env.NODE_ENV,
             hasOpenAIKey: false,
             isVercel: !!process.env.VERCEL,
+            vercelEnv: process.env.VERCEL_ENV,
+            region: process.env.VERCEL_REGION,
           }
         },
         { status: 500 }
@@ -83,6 +93,8 @@ export async function POST(request: NextRequest) {
           environment: {
             nodeEnv: process.env.NODE_ENV,
             isVercel: !!process.env.VERCEL,
+            vercelEnv: process.env.VERCEL_ENV,
+            region: process.env.VERCEL_REGION,
           }
         },
         { status: 500 }
@@ -97,6 +109,8 @@ export async function POST(request: NextRequest) {
       environment: {
         nodeEnv: process.env.NODE_ENV,
         isVercel: !!process.env.VERCEL,
+        vercelEnv: process.env.VERCEL_ENV,
+        region: process.env.VERCEL_REGION,
       }
     });
   } catch (error) {
@@ -108,6 +122,8 @@ export async function POST(request: NextRequest) {
         environment: {
           nodeEnv: process.env.NODE_ENV,
           isVercel: !!process.env.VERCEL,
+          vercelEnv: process.env.VERCEL_ENV,
+          region: process.env.VERCEL_REGION,
         }
       },
       { status: 500 }

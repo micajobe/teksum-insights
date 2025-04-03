@@ -1,93 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { filename: string } }
+  { params }: { params: { filename: string } }
 ) {
   try {
-    const { filename } = context.params;
-    console.log('Requested filename:', filename);
-    
-    // Get the absolute path to the docs directory
-    const docsDir = path.join(process.cwd(), 'docs');
-    console.log('Docs directory:', docsDir);
-    
+    console.log('GET request to /api/reports/[filename]');
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Is Vercel:', !!process.env.VERCEL);
+    console.log('Vercel Environment:', process.env.VERCEL_ENV);
+    console.log('Vercel Region:', process.env.VERCEL_REGION);
+    console.log('Filename:', params.filename);
+
     // Check if docs directory exists
+    const docsDir = path.join(process.cwd(), 'docs');
     if (!fs.existsSync(docsDir)) {
-      console.error('Docs directory does not exist:', docsDir);
+      console.error('Docs directory does not exist');
       return NextResponse.json(
         { 
-          error: 'Reports directory not found',
-          path: docsDir,
+          success: false, 
+          error: 'Docs directory does not exist',
           environment: {
             nodeEnv: process.env.NODE_ENV,
             isVercel: !!process.env.VERCEL,
+            vercelEnv: process.env.VERCEL_ENV,
+            region: process.env.VERCEL_REGION,
             cwd: process.cwd(),
+            docsDir,
           }
         },
         { status: 404 }
       );
     }
-    
-    const filePath = path.join(docsDir, filename);
-    console.log('File path:', filePath);
 
     // Check if file exists
+    const filePath = path.join(docsDir, params.filename);
     if (!fs.existsSync(filePath)) {
       console.error('File does not exist:', filePath);
-      
-      // List available files in the docs directory
-      const files = fs.readdirSync(docsDir);
-      console.log('Available files:', files);
-      
       return NextResponse.json(
         { 
-          error: 'Report not found',
-          requestedFile: filename,
-          availableFiles: files,
-          path: filePath,
+          success: false, 
+          error: 'File not found',
           environment: {
             nodeEnv: process.env.NODE_ENV,
             isVercel: !!process.env.VERCEL,
+            vercelEnv: process.env.VERCEL_ENV,
+            region: process.env.VERCEL_REGION,
+            cwd: process.cwd(),
+            docsDir,
+            filePath,
           }
         },
         { status: 404 }
       );
     }
 
-    // Read the file content
+    // Read file content
     const content = fs.readFileSync(filePath, 'utf-8');
     console.log('File content length:', content.length);
 
-    // Check if the file is HTML
+    // Check if content is HTML
     const isHtml = content.trim().toLowerCase().startsWith('<!doctype html') || 
-                   content.trim().toLowerCase().startsWith('<html');
-    
-    // Always return JSON response, even for HTML content
-    return NextResponse.json(
-      { 
-        content,
-        filename,
-        contentType: isHtml ? 'text/html' : 'text/plain',
-        isHtml
-      },
-      {
+                  content.trim().toLowerCase().startsWith('<html');
+
+    if (isHtml) {
+      return new NextResponse(content, {
         headers: {
-          'Cache-Control': 'public, max-age=3600, must-revalidate',
+          'Content-Type': 'text/html',
         },
+      });
+    }
+
+    // Return JSON response
+    return NextResponse.json({
+      success: true,
+      content,
+      contentType: 'text/plain',
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        isVercel: !!process.env.VERCEL,
+        vercelEnv: process.env.VERCEL_ENV,
+        region: process.env.VERCEL_REGION,
+        cwd: process.cwd(),
+        docsDir,
+        filePath,
       }
-    );
+    });
   } catch (error) {
-    console.error('Error serving report:', error);
+    console.error('Error in GET /api/reports/[filename]:', error);
     return NextResponse.json(
       { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+        success: false, 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred',
         environment: {
           nodeEnv: process.env.NODE_ENV,
           isVercel: !!process.env.VERCEL,
+          vercelEnv: process.env.VERCEL_ENV,
+          region: process.env.VERCEL_REGION,
           cwd: process.cwd(),
         }
       },
