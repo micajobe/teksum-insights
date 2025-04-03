@@ -22,8 +22,7 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['cheerio', 'axios']
-  },
-  output: 'standalone'
+  }
 };
 
 module.exports = nextConfig; 
