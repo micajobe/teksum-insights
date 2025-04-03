@@ -1,22 +1,35 @@
-import { NextResponse } from 'next/server';
-import { TechBusinessScraper } from '@/lib/scraper';
+import { NextRequest, NextResponse } from 'next/server';
+import { TechBusinessScraper } from '../scraper';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Check if OpenAI API key is available
-    const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
-    
-    return NextResponse.json({ 
-      success: true, 
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'OpenAI API key is not configured',
+          environment: {
+            nodeEnv: process.env.NODE_ENV,
+            hasOpenAIKey: false,
+            isVercel: !!process.env.VERCEL,
+          }
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
       message: 'Report generation endpoint is active. Use POST to generate a report.',
       environment: {
         nodeEnv: process.env.NODE_ENV,
-        hasOpenAIKey,
+        hasOpenAIKey: true,
         isVercel: !!process.env.VERCEL,
       }
     });
   } catch (error) {
-    console.error('Error in GET handler:', error);
+    console.error('Error in GET /api/generate-report:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -31,33 +44,38 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    console.log('Starting report generation...');
+    console.log('POST request to /api/generate-report');
     console.log('Environment:', process.env.NODE_ENV);
-    console.log('OpenAI API Key present:', !!process.env.OPENAI_API_KEY);
-    console.log('Is Vercel environment:', !!process.env.VERCEL);
+    console.log('Is Vercel:', !!process.env.VERCEL);
     
-    // Check if OpenAI API key is available
+    // Check if OpenAI API key is configured
     if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key is not configured');
       return NextResponse.json(
         { 
           success: false, 
-          error: 'OpenAI API key is not configured. Please set the OPENAI_API_KEY environment variable.',
+          error: 'OpenAI API key is not configured',
           environment: {
             nodeEnv: process.env.NODE_ENV,
+            hasOpenAIKey: false,
             isVercel: !!process.env.VERCEL,
           }
         },
         { status: 500 }
       );
     }
-    
+
+    // Initialize the scraper
     const scraper = new TechBusinessScraper();
+    
+    // Run the scraper
+    console.log('Running scraper...');
     const result = await scraper.run();
     
     if (!result.success) {
-      console.error('Report generation failed:', result.error);
+      console.error('Scraper failed:', result.error);
       return NextResponse.json(
         { 
           success: false, 
@@ -71,14 +89,18 @@ export async function POST() {
       );
     }
     
-    console.log('Report generation completed successfully');
-    return NextResponse.json({ 
-      success: true, 
+    console.log('Report generated successfully');
+    return NextResponse.json({
+      success: true,
       message: 'Report generated successfully',
-      data: result
+      reportId: result.data?.report?.id,
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        isVercel: !!process.env.VERCEL,
+      }
     });
   } catch (error) {
-    console.error('Error in report generation:', error);
+    console.error('Error in POST /api/generate-report:', error);
     return NextResponse.json(
       { 
         success: false, 
