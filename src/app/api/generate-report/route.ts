@@ -11,6 +11,16 @@ function jsonResponse(data: any, status: number = 200) {
   });
 }
 
+// Helper function to handle timeouts
+function timeoutPromise<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms)
+    )
+  ]);
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Check if OpenAI API key is configured
@@ -90,16 +100,50 @@ export async function POST(request: NextRequest) {
     // Initialize the scraper
     const scraper = new TechBusinessScraper();
     
-    // Run the scraper
+    // Run the scraper with a timeout
     console.log('Running scraper...');
-    const result = await scraper.run();
-    
-    if (!result.success) {
-      console.error('Scraper failed:', result.error);
+    try {
+      // Set timeout to 50 seconds (leaving 10 seconds buffer for Vercel's 60-second limit)
+      const result = await timeoutPromise(scraper.run(), 50000);
+      
+      if (!result.success) {
+        console.error('Scraper failed:', result.error);
+        return jsonResponse(
+          { 
+            success: false, 
+            error: result.error || 'Failed to generate report',
+            environment: {
+              nodeEnv: process.env.NODE_ENV,
+              isVercel: !!process.env.VERCEL,
+              vercelEnv: process.env.VERCEL_ENV,
+              region: process.env.VERCEL_REGION,
+            }
+          },
+          500
+        );
+      }
+      
+      console.log('Report generated successfully');
+      
+      // Return the report content directly
+      return jsonResponse({
+        success: true,
+        message: 'Report generated successfully',
+        report: result.data?.report,
+        htmlContent: result.data?.htmlContent,
+        environment: {
+          nodeEnv: process.env.NODE_ENV,
+          isVercel: !!process.env.VERCEL,
+          vercelEnv: process.env.VERCEL_ENV,
+          region: process.env.VERCEL_REGION,
+        }
+      });
+    } catch (timeoutError) {
+      console.error('Scraper timed out:', timeoutError);
       return jsonResponse(
         { 
           success: false, 
-          error: result.error || 'Failed to generate report',
+          error: 'Report generation timed out. The operation is taking too long to complete.',
           environment: {
             nodeEnv: process.env.NODE_ENV,
             isVercel: !!process.env.VERCEL,
@@ -107,25 +151,9 @@ export async function POST(request: NextRequest) {
             region: process.env.VERCEL_REGION,
           }
         },
-        500
+        504
       );
     }
-    
-    console.log('Report generated successfully');
-    
-    // Return the report content directly
-    return jsonResponse({
-      success: true,
-      message: 'Report generated successfully',
-      report: result.data?.report,
-      htmlContent: result.data?.htmlContent,
-      environment: {
-        nodeEnv: process.env.NODE_ENV,
-        isVercel: !!process.env.VERCEL,
-        vercelEnv: process.env.VERCEL_ENV,
-        region: process.env.VERCEL_REGION,
-      }
-    });
   } catch (error) {
     console.error('Error in POST /api/generate-report:', error);
     return jsonResponse(

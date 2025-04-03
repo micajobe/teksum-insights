@@ -10,6 +10,7 @@ export default function DebugPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [rawResponse, setRawResponse] = useState<string>('');
+  const [isTimeout, setIsTimeout] = useState<boolean>(false);
 
   useEffect(() => {
     checkApi();
@@ -20,6 +21,7 @@ export default function DebugPage() {
       setApiStatus('Checking...');
       setError(null);
       setRawResponse('');
+      setIsTimeout(false);
       
       const response = await fetch('/api/generate-report');
       const responseText = await response.text();
@@ -42,6 +44,11 @@ export default function DebugPage() {
         setApiStatus(`API error: ${data.error}`);
         setDebugInfo(data.environment);
         setError(data.error);
+        
+        // Check if this is a timeout error
+        if (data.error && data.error.includes('timed out')) {
+          setIsTimeout(true);
+        }
       }
     } catch (error) {
       setApiStatus(`API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -54,6 +61,7 @@ export default function DebugPage() {
       setIsLoading(true);
       setError(null);
       setRawResponse('');
+      setIsTimeout(false);
       setReportStatus('Generating report...');
       
       const response = await fetch('/api/generate-report', {
@@ -87,6 +95,11 @@ export default function DebugPage() {
         setReportStatus(`Error: ${data.error}`);
         setDebugInfo(data.environment);
         setError(data.error);
+        
+        // Check if this is a timeout error
+        if (data.error && data.error.includes('timed out')) {
+          setIsTimeout(true);
+        }
       }
     } catch (error) {
       setReportStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -122,6 +135,16 @@ export default function DebugPage() {
           {isLoading ? 'Generating...' : 'Generate Report'}
         </button>
       </div>
+      
+      {isTimeout && (
+        <div className="bg-yellow-100 p-4 rounded mb-4">
+          <h2 className="text-xl font-semibold mb-2">Timeout Notice</h2>
+          <p className="text-yellow-700">
+            The report generation is taking too long and has timed out. This is likely due to the complexity of the operation.
+            Consider breaking down the task into smaller steps or optimizing the scraper.
+          </p>
+        </div>
+      )}
       
       {error && (
         <div className="bg-red-100 p-4 rounded mb-4">
