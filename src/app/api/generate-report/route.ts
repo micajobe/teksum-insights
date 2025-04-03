@@ -102,10 +102,13 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('Report generated successfully');
+    
+    // Return the report content directly
     return NextResponse.json({
       success: true,
       message: 'Report generated successfully',
-      reportId: result.data?.report?.id,
+      report: result.data?.report,
+      htmlContent: result.data?.htmlContent,
       environment: {
         nodeEnv: process.env.NODE_ENV,
         isVercel: !!process.env.VERCEL,

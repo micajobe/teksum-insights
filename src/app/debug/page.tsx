@@ -1,88 +1,43 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DebugPage() {
   const [apiStatus, setApiStatus] = useState<string>('Checking API...');
-  const [reportStatus, setReportStatus] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [reportStatus, setReportStatus] = useState<string>('Not checked');
+  const [htmlContent, setHtmlContent] = useState<string>('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [reportContent, setReportContent] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if the API endpoint is available
-    const checkApi = async () => {
-      try {
-        const response = await fetch('/api/generate-report');
-        const data = await response.json();
-        setApiStatus(`API Status: ${data.message || 'Unknown'}`);
-        setDebugInfo(data);
-      } catch (error) {
-        console.error('Error checking API:', error);
-        setApiStatus(`API Error: ${error instanceof Error ? error.message : 'Failed to connect to API'}`);
-      }
-    };
-    
     checkApi();
   }, []);
 
-  const checkReport = async () => {
-    setLoading(true);
-    setReportStatus('Checking report...');
-    setReportContent(null);
-    
+  const checkApi = async () => {
     try {
-      // First check if the report exists using the check endpoint
-      const checkResponse = await fetch('/api/reports/check?filename=tech_business_report_20250402_latest.html');
-      const checkData = await checkResponse.json();
+      setApiStatus('Checking...');
+      const response = await fetch('/api/generate-report');
+      const data = await response.json();
       
-      console.log('Report check data:', checkData);
-      
-      if (checkData.exists) {
-        setReportStatus(`Report Status: Found (${checkData.size} bytes, modified ${new Date(checkData.modified).toLocaleString()})`);
-        
-        // Now try to fetch the actual report content
-        try {
-          const reportResponse = await fetch('/api/reports/tech_business_report_20250402_latest.html');
-          const reportData = await reportResponse.json();
-          console.log('Report data:', reportData);
-          
-          if (reportData.error) {
-            setReportStatus(`Report Error: ${reportData.error}`);
-            setDebugInfo(reportData);
-          } else {
-            setReportStatus(`Report Status: Found (${reportData.content.length} bytes)`);
-            setDebugInfo(reportData);
-            
-            // Display content preview
-            if (reportData.content) {
-              setReportContent(reportData.content.substring(0, 500) + (reportData.content.length > 500 ? '...' : ''));
-            }
-          }
-        } catch (reportError) {
-          console.error('Error fetching report content:', reportError);
-          setReportStatus(`Report Status: Found but error fetching content: ${reportError instanceof Error ? reportError.message : 'Unknown error'}`);
-        }
+      if (data.success) {
+        setApiStatus('API is working');
+        setDebugInfo(data.environment);
       } else {
-        setReportStatus(`Report Status: Not found (${checkData.error || 'Unknown error'})`);
+        setApiStatus(`API error: ${data.error}`);
+        setDebugInfo(data.environment);
       }
-      
-      setDebugInfo(checkData);
     } catch (error) {
-      console.error('Error checking report:', error);
-      setReportStatus(`Report Error: ${error instanceof Error ? error.message : 'Failed to check report'}`);
-    } finally {
-      setLoading(false);
+      setApiStatus(`API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const generateReport = async () => {
-    setLoading(true);
-    setReportStatus('Generating report...');
-    setReportContent(null);
-    
     try {
-      console.log('Sending request to /api/generate-report');
+      setIsLoading(true);
+      setError(null);
+      setReportStatus('Generating report...');
+      
       const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: {
@@ -90,86 +45,78 @@ export default function DebugPage() {
         },
       });
       
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
       
       if (data.success) {
-        setReportStatus('Report generated successfully!');
-        setDebugInfo(data);
+        setReportStatus('Report generated successfully');
+        if (data.htmlContent) {
+          setHtmlContent(data.htmlContent);
+        }
+        setDebugInfo(data.environment);
       } else {
-        setReportStatus(`Error: ${data.error || 'Failed to generate report'}`);
-        setDebugInfo(data);
+        setReportStatus(`Error: ${data.error}`);
+        setDebugInfo(data.environment);
       }
     } catch (error) {
-      console.error('Error generating report:', error);
-      setReportStatus(`Error: ${error instanceof Error ? error.message : 'Failed to generate report'}`);
+      setReportStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            TEKSUM Insights Debug Page
-          </h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div className="bg-white p-4 rounded shadow">
-              <h2 className="text-xl font-semibold mb-2">API Status</h2>
-              <p className="text-sm text-gray-600">{apiStatus}</p>
-            </div>
-            
-            <div className="bg-white p-4 rounded shadow">
-              <h2 className="text-xl font-semibold mb-2">Report Status</h2>
-              <p className="text-sm text-gray-600">{reportStatus}</p>
-            </div>
-          </div>
-          
-          <div className="flex justify-center space-x-4 mb-8">
-            <button
-              onClick={checkReport}
-              disabled={loading}
-              className={`inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              Check Report
-            </button>
-            
-            <button
-              onClick={generateReport}
-              disabled={loading}
-              className={`inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              Generate Report
-            </button>
-          </div>
-          
-          {debugInfo && (
-            <div className="bg-white p-4 rounded shadow text-left overflow-auto max-h-96 mb-8">
-              <h2 className="text-xl font-semibold mb-2">Debug Information</h2>
-              <pre className="text-xs bg-gray-100 p-2 rounded">
-                {JSON.stringify(debugInfo, null, 2)}
-              </pre>
-            </div>
-          )}
-          
-          {reportContent && (
-            <div className="bg-white p-4 rounded shadow text-left overflow-auto max-h-96">
-              <h2 className="text-xl font-semibold mb-2">Report Content Preview</h2>
-              <div className="text-xs bg-gray-100 p-2 rounded whitespace-pre-wrap">
-                {reportContent}
-              </div>
-            </div>
-          )}
-        </div>
+    <div className="container mx-auto p-4 max-w-4xl">
+      <h1 className="text-2xl font-bold mb-4">Debug Page</h1>
+      
+      <div className="bg-gray-100 p-4 rounded mb-4">
+        <h2 className="text-xl font-semibold mb-2">API Status</h2>
+        <p>{apiStatus}</p>
+        <button 
+          onClick={checkApi}
+          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Check API
+        </button>
       </div>
+      
+      <div className="bg-gray-100 p-4 rounded mb-4">
+        <h2 className="text-xl font-semibold mb-2">Report Status</h2>
+        <p>{reportStatus}</p>
+        <button 
+          onClick={generateReport}
+          disabled={isLoading}
+          className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+        >
+          {isLoading ? 'Generating...' : 'Generate Report'}
+        </button>
+      </div>
+      
+      {error && (
+        <div className="bg-red-100 p-4 rounded mb-4">
+          <h2 className="text-xl font-semibold mb-2">Error</h2>
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+      
+      {htmlContent && (
+        <div className="bg-gray-100 p-4 rounded mb-4">
+          <h2 className="text-xl font-semibold mb-2">Report Preview</h2>
+          <div 
+            className="bg-white p-4 rounded border"
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+          />
+        </div>
+      )}
+      
+      {debugInfo && (
+        <div className="bg-gray-100 p-4 rounded">
+          <h2 className="text-xl font-semibold mb-2">Debug Information</h2>
+          <pre className="bg-gray-200 p-2 rounded overflow-auto">
+            {JSON.stringify(debugInfo, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 } 

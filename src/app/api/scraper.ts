@@ -6,23 +6,10 @@ import OpenAI from 'openai';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-interface ScraperResult {
-  success: boolean;
-  error?: string;
-  data?: {
-    report?: Report;
-    headlines?: Headline[];
-  };
-}
-
 export class TechBusinessScraper {
-  private readonly docsDir: string;
-  private readonly openai: OpenAI;
-  private readonly newsSources: Record<string, string> = {
-    'TechCrunch': 'https://techcrunch.com',
-    'VentureBeat': 'https://venturebeat.com',
-    'McKinsey': 'https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights'
-  };
+  private openai: OpenAI;
+  private docsDir: string;
+  private newsSources: { [key: string]: string };
 
   constructor() {
     // Initialize OpenAI client
@@ -33,58 +20,72 @@ export class TechBusinessScraper {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    // Set up the directory for saving reports
+    // Set up directory for saving reports
     this.docsDir = path.join(process.cwd(), 'docs');
-    console.log('Docs directory:', this.docsDir);
     
-    // Create the docs directory if it doesn't exist
+    // Create docs directory if it doesn't exist
     if (!fs.existsSync(this.docsDir)) {
-      console.log('Creating docs directory...');
       try {
         fs.mkdirSync(this.docsDir, { recursive: true });
-        console.log('Docs directory created successfully');
+        console.log('Created docs directory:', this.docsDir);
       } catch (error) {
         console.error('Error creating docs directory:', error);
-        // Continue anyway, as the directory might already exist in production
+        // Continue anyway, we'll handle file system errors later
       }
     }
+
+    // Define news sources
+    this.newsSources = {
+      techcrunch: 'https://techcrunch.com',
+      venturebeat: 'https://venturebeat.com',
+      mckinsey: 'https://www.mckinsey.com/industries/technology-media-and-telecommunications'
+    };
   }
 
-  async run(): Promise<ScraperResult> {
+  async run(): Promise<{ success: boolean; error?: string; data?: { report: Report; htmlContent: string } }> {
     try {
       console.log('Starting report generation...');
+      
+      // Collect headlines
       const headlines = await this.fetchHeadlines();
+      console.log(`Total headlines collected: ${headlines.length}`);
       
-      if (!headlines.length) {
-        return {
-          success: false,
-          error: 'No headlines were collected'
-        };
+      if (headlines.length === 0) {
+        return { success: false, error: 'No headlines collected' };
       }
-
+      
+      // Analyze headlines
       const analysis = await this.analyzeHeadlines(headlines);
-      if (!analysis) {
-        return {
-          success: false,
-          error: 'Failed to analyze headlines'
-        };
-      }
-
-      const report = this.createReport(headlines, analysis);
-      await this.saveReport(report);
       
-      return {
-        success: true,
-        data: {
+      // Create report
+      const report = this.createReport(headlines, analysis);
+      
+      // Generate HTML content
+      const htmlContent = this.generateHtmlReport(report);
+      
+      // Save report to filesystem if possible (for local development)
+      try {
+        const filename = `tech_business_report_${format(new Date(), 'yyyyMMdd')}_latest.html`;
+        const filePath = path.join(this.docsDir, filename);
+        fs.writeFileSync(filePath, htmlContent);
+        console.log(`Report saved to ${filePath}`);
+      } catch (error) {
+        console.warn('Could not save report to filesystem:', error);
+        // Continue anyway, we'll return the content directly
+      }
+      
+      return { 
+        success: true, 
+        data: { 
           report,
-          headlines
-        }
+          htmlContent
+        } 
       };
     } catch (error) {
       console.error('Error in scraper run:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred' 
       };
     }
   }
@@ -282,31 +283,6 @@ export class TechBusinessScraper {
       sections,
       summary: sections.map(s => s.title).join(', ')
     };
-  }
-
-  private async saveReport(report: Report): Promise<void> {
-    try {
-      // Create the HTML content
-      const htmlContent = this.generateHtmlReport(report);
-      
-      // Save the report to a file
-      const filename = `tech_business_report_${report.id}.html`;
-      const latestFilename = 'tech_business_report_latest.html';
-      const filePath = path.join(this.docsDir, filename);
-      const latestFilePath = path.join(this.docsDir, latestFilename);
-      
-      console.log(`Saving report to ${filePath}`);
-      fs.writeFileSync(filePath, htmlContent);
-      
-      // Also save as the latest version
-      console.log(`Saving latest report to ${latestFilePath}`);
-      fs.writeFileSync(latestFilePath, htmlContent);
-      
-      console.log('Report saved successfully');
-    } catch (error) {
-      console.error('Error saving report:', error);
-      throw error;
-    }
   }
 
   private generateHtmlReport(report: Report): string {
