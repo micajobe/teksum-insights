@@ -44,18 +44,20 @@ export default function DebugPage() {
         // Now try to fetch the actual report content
         try {
           const reportResponse = await fetch('/api/reports/tech_business_report_20250402_latest.html');
-          const contentType = reportResponse.headers.get('content-type');
+          const reportData = await reportResponse.json();
+          console.log('Report data:', reportData);
           
-          if (contentType && contentType.includes('application/json')) {
-            // Handle JSON response
-            const reportData = await reportResponse.json();
-            console.log('Report data (JSON):', reportData);
+          if (reportData.error) {
+            setReportStatus(`Report Error: ${reportData.error}`);
             setDebugInfo(reportData);
           } else {
-            // Handle HTML or other text response
-            const reportText = await reportResponse.text();
-            console.log('Report content length:', reportText.length);
-            setReportContent(reportText.substring(0, 500) + (reportText.length > 500 ? '...' : ''));
+            setReportStatus(`Report Status: Found (${reportData.content.length} bytes)`);
+            setDebugInfo(reportData);
+            
+            // Display content preview
+            if (reportData.content) {
+              setReportContent(reportData.content.substring(0, 500) + (reportData.content.length > 500 ? '...' : ''));
+            }
           }
         } catch (reportError) {
           console.error('Error fetching report content:', reportError);

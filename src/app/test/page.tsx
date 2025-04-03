@@ -62,30 +62,28 @@ export default function TestPage() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            TEKSUM Insights Report Generator
+            TEKSUM Insights Test Page
           </h1>
           
-          {apiStatus && (
-            <div className="mb-4 p-2 bg-gray-200 rounded">
-              {apiStatus}
-            </div>
-          )}
+          <div className="bg-white p-4 rounded shadow mb-8">
+            <h2 className="text-xl font-semibold mb-2">API Status</h2>
+            <p className="text-sm text-gray-600">{apiStatus}</p>
+          </div>
+          
+          <div className="bg-white p-4 rounded shadow mb-8">
+            <h2 className="text-xl font-semibold mb-2">Status</h2>
+            <p className="text-sm text-gray-600">{status}</p>
+          </div>
           
           <button
             onClick={generateReport}
             disabled={loading}
-            className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+            className={`inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
               loading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             {loading ? 'Generating...' : 'Generate Report'}
           </button>
-          
-          {status && (
-            <div className="mt-4 text-sm text-gray-600">
-              {status}
-            </div>
-          )}
         </div>
       </div>
     </div>
