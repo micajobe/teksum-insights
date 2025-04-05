@@ -1,9 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-from openai import OpenAI
+import openai
 import os
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from dotenv import load_dotenv
 import time
 import random
@@ -11,20 +11,38 @@ import webbrowser
 import json
 import re
 import traceback
-import openai
 import shutil
 from urllib.parse import urlparse
 
 # Load environment variables
-load_dotenv()
+print("Loading environment variables...")
+# Get the absolute path to the .env file
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+print(f"Looking for .env file at: {env_path}")
+print(f"File exists: {os.path.exists(env_path)}")
+
+if os.path.exists(env_path):
+    with open(env_path, 'r') as f:
+        print("First line of .env file:", f.readline().strip())
+
+load_dotenv(env_path)
 
 # Set up OpenAI API key
-openai.api_key = os.getenv('OPENAI_API_KEY')
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    raise ValueError("OpenAI API key not found in environment variables")
+
+print(f"Raw API Key from env: {api_key[:20]}...")  # Debug output to see the actual key
+openai.api_key = api_key
+
+print(f"API Key loaded: {'Yes' if api_key else 'No'}")
+print(f"OpenAI API Key set to: {openai.api_key[:20]}...")  # Debug output to verify OpenAI's key
 
 class TechBusinessScraperAgent:
     def __init__(self, api_key: str):
         print("Initializing TechBusinessScraperAgent...")
-        self.client = OpenAI(api_key=api_key)
+        # Use the API key from environment variable
+        openai.api_key = api_key
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -140,119 +158,47 @@ class TechBusinessScraperAgent:
         return headlines
 
     def _format_headlines_for_prompt(self, headlines: List[Dict]) -> str:
-        """Format headlines for the ChatGPT prompt."""
+        """Format headlines for the prompt."""
         formatted_headlines = []
         for headline in headlines:
-            formatted_headlines.append(f"Source: {headline['source']}\nHeadline: {headline['title']}\n")
+            source = headline.get('source', 'Unknown')
+            title = headline.get('title', '')
+            formatted_headlines.append(f"{title} ({source})")
         return "\n".join(formatted_headlines)
 
-    def get_summary(self, headlines: List[Dict]) -> str:
-        """Generate a thematic summary of the headlines using ChatGPT."""
+    def get_summary(self, headlines: List[Dict]) -> Tuple[str, str]:
+        print("\nPreparing prompt for ChatGPT...")
         try:
-            headlines_text = self._format_headlines_for_prompt(headlines)
-            
-            analysis_prompt = f"""
-            Analyze these tech and business headlines and provide a structured summary:
-
-            {headlines_text}
-
-            Please provide a comprehensive analysis in the following format:
-
-            1. MAJOR TECHNOLOGY TRENDS:
-            • Summary of key technology developments
-            • Most significant headline and why
-
-            2. BUSINESS IMPACT ANALYSIS:
-            • Key business insights and their potential impact
-            • Most relevant headline and why
-
-            3. INDUSTRY MOVEMENTS:
-            • Notable strategic shifts or industry changes
-            • Supporting headline and why
-
-            4. EMERGING TECHNOLOGIES:
-            • New technologies or innovations mentioned
-            • Key innovation headline and why
-
-            5. STRATEGIC TAKEAWAYS:
-            • Important business strategy lessons
-            • Strategic insight headline and why
-
-            For each section, focus on identifying clear patterns and their implications for the tech and business landscape.
-            """
-            
             print("\nGenerating thematic analysis...")
-            response = openai.chat.completions.create(
-                model="gpt-4",
+            formatted_headlines = self._format_headlines_for_prompt(headlines)
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a professional technology and business analyst."},
-                    {"role": "user", "content": analysis_prompt}
+                    {"role": "user", "content": self.generate_analysis_prompt(formatted_headlines)}
                 ],
                 temperature=0.7,
                 max_tokens=1500
             )
-            
-            if not response.choices or not response.choices[0].message:
-                print("Error: Empty response from ChatGPT for thematic analysis")
-                return None
-                
-            thematic_analysis = response.choices[0].message.content
-            
-            # Now get monetization strategies based on the analysis
-            monetization_prompt = f"""
-            Based on the following technology and business analysis, suggest specific monetization strategies:
+            thematic_analysis = response.choices[0].message['content'].strip()
 
-            {thematic_analysis}
-
-            Please provide 3 detailed monetization strategies for each section above. For each strategy include:
-            - Target market
-            - Implementation timeline
-            - Required resources
-            - Potential ROI metrics
-            - Key success factors
-            - Risk mitigation strategies
-
-            Format as:
-
-            MONETIZATION STRATEGIES:
-            [Section Name]:
-            1. [Strategy Name]
-               • Details...
-            2. [Strategy Name]
-               • Details...
-            3. [Strategy Name]
-               • Details...
-
-            Focus on practical, actionable strategies that can be implemented within 6-12 months.
-            """
-            
             print("\nGenerating monetization strategies...")
-            monetization_response = openai.chat.completions.create(
-                model="gpt-4",
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a business strategy consultant specializing in technology monetization."},
-                    {"role": "user", "content": monetization_prompt}
+                    {"role": "user", "content": self.generate_monetization_prompt(thematic_analysis)}
                 ],
                 temperature=0.7,
-                max_tokens=1500
+                max_tokens=1000
             )
-            
-            if not monetization_response.choices or not monetization_response.choices[0].message:
-                print("Error: Empty response from ChatGPT for monetization strategies")
-                return thematic_analysis  # Return just the thematic analysis if monetization fails
-                
-            monetization_strategies = monetization_response.choices[0].message.content
-            
-            # Combine both analyses
-            complete_analysis = f"{thematic_analysis}\n\n{monetization_strategies}"
-            
-            print("Analysis generated successfully!")
-            return complete_analysis
-                
+            monetization_strategies = response.choices[0].message['content'].strip()
+
+            return thematic_analysis, monetization_strategies
         except Exception as e:
             print(f"Error generating analysis: {str(e)}")
             traceback.print_exc()
-            return None
+            return "Error: Failed to generate summary.", ""
 
     def clean_markdown(self, text: str) -> str:
         """Clean markdown formatting and structure the text."""
@@ -748,272 +694,76 @@ class TechBusinessScraperAgent:
         return html_template
 
     def save_and_open_report(self, html_content: str) -> None:
-        """Save the HTML report and open it in the default browser."""
-        reports_dir = "docs"  # Changed from tech_business_reports to docs
-        if not os.path.exists(reports_dir):
-            os.makedirs(reports_dir)
-
-        # Copy the font file if it exists in the current directory
-        font_source = "GelaTrialVF.ttf"
-        if os.path.exists(font_source):
-            shutil.copy2(font_source, os.path.join(reports_dir, "GelaTrialVF.ttf"))
-
-        # Check for and remove existing reports from today
-        today = datetime.now().strftime("%Y%m%d")
-        existing_reports = [f for f in os.listdir(reports_dir) 
-                          if f.startswith(f'tech_business_report_{today}_') 
-                          and f.endswith('.html')]
+        """Save the report to a file and open it."""
+        # Create docs directory if it doesn't exist
+        os.makedirs('docs', exist_ok=True)
         
-        # Remove existing reports from today
-        for report in existing_reports:
-            try:
-                os.remove(os.path.join(reports_dir, report))
-                print(f"Removed existing report: {report}")
-            except Exception as e:
-                print(f"Error removing existing report {report}: {str(e)}")
-
-        # Save timestamped version
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{reports_dir}/tech_business_report_{timestamp}.html"
+        # Generate filename with current date
+        current_date = datetime.now().strftime('%Y%m%d')
+        filename = f'tech_business_report_{current_date}_latest.html'
+        filepath = os.path.join('docs', filename)
         
-        with open(filename, "w", encoding="utf-8") as f:
+        # Save the report
+        with open(filepath, 'w', encoding='utf-8') as f:
             f.write(html_content)
+        print(f"\nReport saved to: {filepath}")
 
-        # Save latest version
-        latest_file = f"{reports_dir}/tech_business_report_{today}_latest.html"
-        with open(latest_file, "w", encoding="utf-8") as f:
-            f.write(html_content)
-
-        webbrowser.open('file://' + os.path.abspath(filename))
-
+        # Create or update the index.html file
         self.update_index_html()
 
     def update_index_html(self) -> None:
-        """Update index.html with latest report content."""
-        reports_dir = "docs"
-        
-        # Get all report files except latest
-        report_files = [f for f in os.listdir(reports_dir) 
-                       if f.startswith('tech_business_report_') 
-                       and f.endswith('.html')
-                       and not f.endswith('_latest.html')]
-        
-        # Sort by date (newest first)
-        report_files.sort(reverse=True)
-        
-        # Get latest report content
-        latest_report = os.path.join(reports_dir, "tech_business_report_20250401_latest.html")
-        with open(latest_report, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        # Parse the HTML to extract trends section
-        soup = BeautifulSoup(content, 'html.parser')
-        trends_section = soup.find('h3', string='MAJOR TECHNOLOGY TRENDS')
-        if trends_section:
-            trends_content = trends_section.find_parent('div').decode_contents()
-        else:
-            trends_content = "<p>Error loading trends</p>"
-        
-        # Generate archive items HTML
-        archive_items = ""
-        for i, report in enumerate(report_files[:5]):
-            date_str = report.split('_')[3]  # Gets '20250401'
-            date = datetime.strptime(date_str, '%Y%m%d')
-            formatted_date = date.strftime('%B %d, %Y')
+        """Update the index.html file with links to all reports."""
+        try:
+            # Create docs directory if it doesn't exist
+            os.makedirs('docs', exist_ok=True)
             
-            archive_items += f"""
-                    <li class="archive-item">
-                        <a href="{report}" class="archive-link">
-                            <div class="archive-date">{formatted_date}</div>
-                            <div>Tech & Business Report</div>
-                        </a>
-                    </li>"""
-        
-        # Create index.html content
-        index_html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEKSUM Insights</title>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {{
-            --primary-color: #A78BFA;
-            --secondary-color: #F3F0FF;
-            --text-color: #1a1a1a;
-            --accent-color: #0017d3;
-            --bg-color: #FFFFFF;
-            --border-color: #E5E7EB;
-            --hero-bg: linear-gradient(135deg, #A78BFA 0%, #0017d3 100%);
-        }}
-
-        @font-face {{
-            font-family: 'GelaTrialVF';
-            src: url('GelaTrialVF.ttf') format('truetype');
-            font-weight: 100 900;
-            font-style: normal;
-            font-display: swap;
-        }}
-
-        body {{
-            font-family: 'Libre Baskerville', Georgia, serif;
-            line-height: 1.8;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-        }}
-
-        .hero {{
-            background: var(--hero-bg);
-            min-height: 60vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-            padding: 2rem;
-        }}
-
-        .hero-content {{
-            position: relative;
-            z-index: 2;
-            max-width: 800px;
-            padding: 2rem;
-            text-align: center;
-        }}
-
-        .hero-title {{
-            font-family: 'GelaTrialVF', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: clamp(3rem, 10vw, 6rem);
-            margin: 0;
-            line-height: 1;
-            color: white;
-        }}
-
-        .hero-date {{
-            font-family: 'Inter', sans-serif;
-            font-size: 1.2rem;
-            color: white;
-            margin-top: 1rem;
-            opacity: 0.9;
-        }}
-
-        .container {{
-            max-width: 1140px;
-            margin: 0 auto;
-            padding: 2rem;
-        }}
-
-        .trends-section {{
-            margin: 3rem 0;
-            padding: 2rem;
-            background: var(--secondary-color);
-            border-radius: 12px;
-        }}
-
-        .cta-button {{
-            display: inline-block;
-            background: var(--accent-color);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            margin-top: 2rem;
-            transition: transform 0.2s ease;
-        }}
-
-        .cta-button:hover {{
-            transform: translateY(-2px);
-        }}
-
-        .archive-section {{
-            margin-top: 4rem;
-        }}
-
-        .archive-list {{
-            list-style: none;
-            padding: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }}
-
-        .archive-item {{
-            background: var(--secondary-color);
-            padding: 1.5rem;
-            border-radius: 8px;
-            transition: transform 0.2s ease;
-        }}
-
-        .archive-item:hover {{
-            transform: translateY(-3px);
-        }}
-
-        .archive-link {{
-            text-decoration: none;
-            color: var(--text-color);
-        }}
-
-        .archive-date {{
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            color: var(--accent-color);
-            margin-bottom: 0.5rem;
-        }}
-
-        @media (max-width: 768px) {{
-            .hero {{
-                min-height: 50vh;
-                padding: 1rem;
-            }}
-
-            .container {{
-                padding: 1rem;
-            }}
-
-            .trends-section {{
-                padding: 1.5rem;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">TEKSUM</h1>
-            <div class="hero-date">Daily Tech & Business Insights</div>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="trends-section">
-            <h2>Today's Major Technology Trends</h2>
-            <div id="trends-content">
-                {trends_content}
-            </div>
-            <a href="tech_business_report_{datetime.now().strftime('%Y%m%d')}_latest.html" class="cta-button">Read Today's Report</a>
-        </div>
-
-        <div class="archive-section">
-            <h2>Recent Reports</h2>
-            <ul class="archive-list">
-                {archive_items}
-            </ul>
-        </div>
-    </div>
-</body>
-</html>
-"""
-        
-        # Write the updated index.html
-        index_path = os.path.join(reports_dir, "index.html")
-        with open(index_path, 'w', encoding='utf-8') as f:
-            f.write(index_html)
+            # Get all report files
+            reports = []
+            if os.path.exists('docs'):
+                for file in os.listdir('docs'):
+                    if file.startswith('tech_business_report_') and file.endswith('.html'):
+                        reports.append(file)
+            
+            # Sort reports by date (newest first)
+            reports.sort(reverse=True)
+            
+            # Generate index.html content
+            index_content = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Tech Business Reports</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    h1 { color: #333; }
+                    ul { list-style-type: none; padding: 0; }
+                    li { margin: 10px 0; }
+                    a { color: #0066cc; text-decoration: none; }
+                    a:hover { text-decoration: underline; }
+                </style>
+            </head>
+            <body>
+                <h1>Tech Business Reports</h1>
+                <ul>
+            """
+            
+            for report in reports:
+                date_str = report.split('_')[2]  # Extract date from filename
+                index_content += f'    <li><a href="{report}">{date_str} Report</a></li>\n'
+            
+            index_content += """
+                </ul>
+            </body>
+            </html>
+            """
+            
+            # Save index.html
+            with open(os.path.join('docs', 'index.html'), 'w', encoding='utf-8') as f:
+                f.write(index_content)
+            
+        except Exception as e:
+            print(f"Error updating index.html: {str(e)}")
+            traceback.print_exc()
 
     def summarize_insights(self) -> dict:
         """Use ChatGPT to summarize tech and business insights."""
@@ -1028,7 +778,7 @@ class TechBusinessScraperAgent:
             }
 
         print("\nPreparing prompt for ChatGPT...")
-        summary = self.get_summary(headlines)
+        summary, monetization_strategies = self.get_summary(headlines)
 
         if summary:
             # Generate HTML and save
@@ -1094,6 +844,66 @@ class TechBusinessScraperAgent:
             print(f"Reports directory not found: {reports_dir}")
         
         return archive_html
+
+    def generate_analysis_prompt(self, headlines: List[str]) -> str:
+        headlines_text = "\n".join(headlines)
+        return f"""
+        Analyze these tech and business headlines and provide a structured summary:
+
+        {headlines_text}
+
+        Please provide a comprehensive analysis in the following format:
+
+        1. MAJOR TECHNOLOGY TRENDS:
+        • Summary of key technology developments
+        • Most significant headline and why
+
+        2. BUSINESS IMPACT ANALYSIS:
+        • Key business insights and their potential impact
+        • Most relevant headline and why
+
+        3. INDUSTRY MOVEMENTS:
+        • Notable strategic shifts or industry changes
+        • Supporting headline and why
+
+        4. EMERGING TECHNOLOGIES:
+        • New technologies or innovations mentioned
+        • Key innovation headline and why
+
+        5. STRATEGIC TAKEAWAYS:
+        • Important business strategy lessons
+        • Strategic insight headline and why
+
+        For each section, focus on identifying clear patterns and their implications for the tech and business landscape.
+        """
+
+    def generate_monetization_prompt(self, thematic_analysis: str) -> str:
+        return f"""
+        Based on the following technology and business analysis, suggest specific monetization strategies:
+
+        {thematic_analysis}
+
+        Please provide 3 detailed monetization strategies for each section above. For each strategy include:
+        - Target market
+        - Implementation timeline
+        - Required resources
+        - Potential ROI metrics
+        - Key success factors
+        - Risk mitigation strategies
+
+        Format as:
+
+        MONETIZATION STRATEGIES:
+        [Section Name]:
+        1. [Strategy Name]
+           • Details...
+        2. [Strategy Name]
+           • Details...
+        3. [Strategy Name]
+           • Details...
+
+        Focus on practical, actionable strategies that can be implemented within 6-12 months.
+        """
 
 def main():
     try:

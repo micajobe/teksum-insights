@@ -26,12 +26,10 @@ const nextConfig = {
     }
     return config;
   },
+  // Remove experimental options that were causing issues
   experimental: {
-    webpackBuildWorker: true,
-    parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
-  },
-  serverExternalPackages: ['cheerio', 'axios']
+    // Add only supported experimental features here if needed
+  }
 };
 
 module.exports = nextConfig; 
