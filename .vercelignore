@@ -1,7 +1,6 @@
 .git
 .github
 node_modules
-docs
 *.log
 .env.local
 .env.development

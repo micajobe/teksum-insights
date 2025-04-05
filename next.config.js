@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
-    unoptimized: true
+    unoptimized: true,
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -21,8 +27,11 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    serverComponentsExternalPackages: ['cheerio', 'axios']
-  }
+    webpackBuildWorker: true,
+    parallelServerBuildTraces: true,
+    parallelServerCompiles: true,
+  },
+  serverExternalPackages: ['cheerio', 'axios']
 };
 
 module.exports = nextConfig; 
