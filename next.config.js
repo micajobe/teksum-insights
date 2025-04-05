@@ -26,6 +26,8 @@ const nextConfig = {
     }
     return config;
   },
+  // Disable font optimization
+  optimizeFonts: false,
   // Remove experimental options that were causing issues
   experimental: {
     // Add only supported experimental features here if needed

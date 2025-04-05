@@ -1,17 +1,4 @@
 import "./globals.css"
-import { Noto_Sans, Noto_Serif } from "next/font/google"
-
-const notoSans = Noto_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  weight: ["400", "700", "800"],
-})
-
-const notoSerif = Noto_Serif({
-  subsets: ["latin"],
-  variable: "--font-serif",
-  weight: ["400", "700"],
-})
 
 export const metadata = {
   title: "TEKSUM Insights",
@@ -25,14 +12,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${notoSans.variable} ${notoSerif.variable} font-sans`}>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet" />
+      </head>
+      <body className="font-sans bg-background text-foreground">
         <main className="min-h-screen">
           {children}
         </main>
-        <footer className="footer">
-          <div className="footer-content">
-            <div className="footer-logo font-serif">TEKSUM</div>
-            <p className="footer-text">Tech Business Intelligence</p>
+        <footer className="bg-digital-blue text-white">
+          <div className="max-w-7xl mx-auto py-4 px-4 flex flex-col items-center gap-2">
+            <div className="text-2xl font-serif font-bold">TEKSUM</div>
+            <p className="text-sm opacity-80">Tech Business Intelligence</p>
           </div>
         </footer>
       </body>
