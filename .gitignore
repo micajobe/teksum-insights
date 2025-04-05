@@ -75,4 +75,4 @@ next-env.d.ts
 
 # docs
 /docs/*
-!/docs/.gitkeep 
+!/docs/.gitkeep * 2
