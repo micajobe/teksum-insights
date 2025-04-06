@@ -1,5 +1,5 @@
 import { getReportData } from "@/lib/server-data"
-import { getAvailableReports, REPORTS_DIR } from "@/lib/available-reports"
+import { getAvailableReports, REPORTS_DIR } from "@/lib/reports"
 import HeadlineGroup from "@/components/headline-group"
 import InsightSection from "@/components/insight-section"
 import OpportunityCard from "@/components/opportunity-card"
