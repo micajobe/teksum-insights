@@ -137,10 +137,11 @@ export default function Dashboard() {
 
       {/* Bold TEKSUM Footer */}
       <div className="w-full flex justify-center">
-        <footer className="w-[90%] bg-digital-blue py-24 sm:py-32 px-8">
+        <footer className="w-full bg-digital-blue py-24 sm:py-32 px-8">
           <h2 className="font-sans text-white text-7xl sm:text-9xl md:text-[12rem] font-extrabold text-center tracking-tighter">
             TEKSUM
           </h2>
+          <div className="text-xs text-center text-white opacity-80 mt-4">© 2025 All rights reserved.</div>
         </footer>
       </div>
     </div>
