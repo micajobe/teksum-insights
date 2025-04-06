@@ -4,7 +4,7 @@ import path from 'path'
 import { headers } from 'next/headers'
 import { getAvailableReports } from './available-reports'
 
-const REPORTS_DIR = path.join(process.cwd(), 'scripts', 'docs')
+const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
 
 // Default data in case no valid report is found
 const defaultData: ReportData = {

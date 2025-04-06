@@ -1,8 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 
-const REPORTS_DIR = path.join(process.cwd(), 'scripts', 'docs')
-const REPORTS_LIST_FILE = path.join(process.cwd(), 'scripts', 'docs', 'available-reports.json')
+const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
+const REPORTS_LIST_FILE = path.join(process.cwd(), 'public', 'reports', 'available-reports.json')
 
 export function updateAvailableReports() {
   try {
