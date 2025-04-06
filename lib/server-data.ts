@@ -66,9 +66,20 @@ function convertHeadlinesToObjects(headlines: string[]): HeadlineObject[] {
       };
     }
     
-    // If the format doesn't match, just use the whole string as the title
+    // If the format doesn't match, try to extract just the title and source
+    const simpleMatch = headline.match(/^(.*?)\s*\((.*?)\)/);
+    if (simpleMatch) {
+      const [_, title, source] = simpleMatch;
+      return {
+        title: title.trim(),
+        source: source.trim(),
+        url: "#"
+      };
+    }
+    
+    // If no parentheses found, use the whole string as the title
     return {
-      title: headline,
+      title: headline.trim(),
       source: "Unknown",
       url: "#"
     };
