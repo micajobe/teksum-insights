@@ -43,6 +43,8 @@ const defaultData: ReportData = {
 export async function getReportData(reportParam?: string | null) {
   try {
     console.log('getReportData called with reportParam:', reportParam)
+    console.log('REPORTS_DIR:', REPORTS_DIR)
+    console.log('Directory exists:', fs.existsSync(REPORTS_DIR))
     
     // Get the list of available reports
     const reports = await getAvailableReports()
@@ -74,6 +76,13 @@ export async function getReportData(reportParam?: string | null) {
     // Read the report file
     const filePath = path.join(REPORTS_DIR, filename)
     console.log('Reading report from:', filePath)
+    console.log('File exists:', fs.existsSync(filePath))
+    
+    if (!fs.existsSync(filePath)) {
+      console.error(`Report file not found: ${filePath}`)
+      return { data: null, filename: null }
+    }
+    
     const fileContents = fs.readFileSync(filePath, 'utf-8')
     const data = JSON.parse(fileContents)
     console.log('Report data loaded successfully')
@@ -81,6 +90,7 @@ export async function getReportData(reportParam?: string | null) {
     return { data, filename }
   } catch (error) {
     console.error('Error reading report data:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available')
     return { data: null, filename: null }
   }
 } 
