@@ -1,7 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 
-const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
+// Export the REPORTS_DIR constant
+export const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
 const REPORTS_LIST_FILE = path.join(process.cwd(), 'public', 'reports', 'available-reports.json')
 
 export function updateAvailableReports() {
@@ -11,7 +12,16 @@ export function updateAvailableReports() {
     
     if (!fs.existsSync(REPORTS_DIR)) {
       console.error('Reports directory not found:', REPORTS_DIR)
-      return []
+      return {
+        files: [],
+        error: {
+          message: 'Reports directory not found',
+          details: {
+            reportsDir: REPORTS_DIR,
+            directoryExists: false
+          }
+        }
+      }
     }
     
     // Get all JSON files in the reports directory
@@ -24,20 +34,32 @@ export function updateAvailableReports() {
     // Write the list to available-reports.json
     fs.writeFileSync(REPORTS_LIST_FILE, JSON.stringify(files, null, 2))
     console.log('Available reports list updated:', files)
-    return files
+    return { files, error: null }
   } catch (error) {
     console.error('Error updating available reports:', error)
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available')
-    return []
+    return {
+      files: [],
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: {
+          reportsDir: REPORTS_DIR,
+          directoryExists: fs.existsSync(REPORTS_DIR),
+          stack: error instanceof Error ? error.stack : 'No stack trace available'
+        }
+      }
+    }
   }
 }
 
 export function getAvailableReports() {
   try {
     // Always update the list of available reports
-    return updateAvailableReports()
+    const result = updateAvailableReports()
+    return result.files
   } catch (error) {
     console.error('Error reading available reports:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available')
     return []
   }
 } 
