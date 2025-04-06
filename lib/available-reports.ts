@@ -1,30 +1,9 @@
 import fs from 'fs'
 import path from 'path'
 
-// Function to find the reports directory
-function findReportsDir() {
-  // Try different possible locations
-  const possiblePaths = [
-    path.join(process.cwd(), 'public', 'reports'),
-    '/vercel/path1/public/reports',
-    '/var/task/public/reports',
-    '/public/reports'
-  ]
-  
-  for (const dir of possiblePaths) {
-    if (fs.existsSync(dir)) {
-      console.log(`Found reports directory at: ${dir}`)
-      return dir
-    }
-  }
-  
-  // If no directory is found, return the default path
-  console.log(`No reports directory found, using default: ${path.join(process.cwd(), 'public', 'reports')}`)
-  return path.join(process.cwd(), 'public', 'reports')
-}
-
 // Export the REPORTS_DIR constant
-export const REPORTS_DIR = findReportsDir()
+// Use a simple path that works in both local and Vercel environments
+export const REPORTS_DIR = '/public/reports'
 const REPORTS_LIST_FILE = path.join(REPORTS_DIR, 'available-reports.json')
 
 export function updateAvailableReports() {
