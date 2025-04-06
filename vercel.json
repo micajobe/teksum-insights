@@ -9,8 +9,8 @@
   "public": true,
   "crons": [
     {
-      "path": "/api/scrape",
-      "schedule": "0 0 */2 * *"
+      "path": "/api/run-scraper",
+      "schedule": "0 0 * * *"
     }
   ],
   "routes": [
