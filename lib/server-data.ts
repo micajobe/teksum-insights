@@ -2,12 +2,13 @@ import type { ReportData } from "./types"
 import fs from 'fs'
 import path from 'path'
 import { headers } from 'next/headers'
-import { getAvailableReports } from './available-reports'
+import { getAvailableReports as getAvailableReportsFromFile } from './available-reports'
 
+// Export the REPORTS_DIR constant
 export const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
 
 // Re-export getAvailableReports
-export { getAvailableReports }
+export const getAvailableReports = getAvailableReportsFromFile
 
 // Default data in case no valid report is found
 const defaultData: ReportData = {

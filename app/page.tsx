@@ -32,10 +32,11 @@ export default async function Dashboard({
   console.log('Search params:', searchParams)
   
   const reportParam = searchParams.report as string | undefined
-  const { data: reportData, filename } = await getReportData(reportParam)
-  console.log('getReportData returned:', { filename, hasData: !!reportData })
+  const { data: reportData, filename, error } = await getReportData(reportParam)
+  console.log('getReportData returned:', { filename, hasData: !!reportData, error })
   
-  const reports = await getAvailableReports() as string[]
+  const reportsResult = await getAvailableReports()
+  const reports = Array.isArray(reportsResult) ? reportsResult as string[] : []
   console.log('getAvailableReports returned:', reports)
   
   console.log('=== Debug Information ===')
@@ -85,6 +86,18 @@ export default async function Dashboard({
                 <p><span className="font-medium">Available Reports:</span> {reports.length > 0 ? (reports as string[]).join(', ') : 'None'}</p>
                 <p><span className="font-medium">Requested Report:</span> {reportParam || 'Latest'}</p>
                 <p><span className="font-medium">Current Filename:</span> {filename || 'None'}</p>
+                
+                {error && (
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded">
+                    <h4 className="font-medium text-red-700 mb-2">Error Details:</h4>
+                    <p className="text-red-600">{error.message}</p>
+                    {error.details && (
+                      <div className="mt-2 text-xs text-red-500">
+                        <pre className="whitespace-pre-wrap">{JSON.stringify(error.details, null, 2)}</pre>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -184,13 +197,16 @@ export default async function Dashboard({
         {/* Headlines by Source */}
         <section className="mb-16">
           <h2 className="mb-6 font-sans text-2xl font-bold">Headlines by Source</h2>
-          {Array.from(new Set(reportData.headlines.map((h: Headline) => h.source))).map((source: string) => (
-            <HeadlineGroup
-              key={source}
-              source={source}
-              headlines={reportData.headlines.filter((h: Headline) => h.source === source)}
-            />
-          ))}
+          {(() => {
+            const sources = Array.from(new Set(reportData.headlines.map((h: Headline) => h.source))) as string[];
+            return sources.map((source) => (
+              <HeadlineGroup
+                key={source}
+                source={source}
+                headlines={reportData.headlines.filter((h: Headline) => h.source === source)}
+              />
+            ));
+          })()}
         </section>
 
         {/* Navigation Buttons */}
