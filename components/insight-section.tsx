@@ -1,11 +1,17 @@
 import { Separator } from "@/components/ui/separator"
 import DropCap from "@/components/drop-cap"
 
+interface Headline {
+  title: string
+  source: string
+  url: string
+}
+
 interface InsightSectionProps {
   title: string
   summary: string
   insights: string[]
-  headlines: string[]
+  headlines: Headline[]
 }
 
 export default function InsightSection({ title, summary, insights, headlines }: InsightSectionProps) {
@@ -43,7 +49,10 @@ export default function InsightSection({ title, summary, insights, headlines }: 
             {headlines.map((headline, index) => (
               <li key={index} className="flex items-start gap-3">
                 <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-neutral-400" />
-                <span className="text-neutral-700">{headline}</span>
+                <span className="text-neutral-700">
+                  {headline.title} 
+                  {headline.source && <span className="text-neutral-500"> ({headline.source})</span>}
+                </span>
               </li>
             ))}
           </ul>
