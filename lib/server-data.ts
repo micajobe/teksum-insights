@@ -2,13 +2,10 @@ import type { ReportData } from "./types"
 import fs from 'fs'
 import path from 'path'
 import { headers } from 'next/headers'
-import { getAvailableReports as getAvailableReportsFromFile } from './available-reports'
+import { getAvailableReports as getAvailableReportsFromFile, REPORTS_DIR } from './available-reports'
 
-// Export the REPORTS_DIR constant
-export const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
-
-// Re-export getAvailableReports
-export const getAvailableReports = getAvailableReportsFromFile
+// Re-export REPORTS_DIR and getAvailableReports
+export { REPORTS_DIR, getAvailableReportsFromFile as getAvailableReports }
 
 // Default data in case no valid report is found
 const defaultData: ReportData = {
@@ -51,7 +48,7 @@ export async function getReportData(reportParam?: string | null) {
     console.log('Directory exists:', fs.existsSync(REPORTS_DIR))
     
     // Get the list of available reports
-    const reports = await getAvailableReports()
+    const reports = await getAvailableReportsFromFile()
     console.log('Available reports:', reports)
     
     // If no reports are available, return null with error info
@@ -72,7 +69,7 @@ export async function getReportData(reportParam?: string | null) {
     }
 
     // If a specific report is requested, use it
-    let filename = reportParam
+    let filename = reportParam || reports[0]
     console.log('Initial filename:', filename)
     
     if (filename) {
