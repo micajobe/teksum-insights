@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useRouter } from "next/navigation"
 
 interface ReportNavigationProps {
   hasPreviousReport: boolean
@@ -17,7 +16,27 @@ export default function ReportNavigation({
   currentReportIndex,
   reports
 }: ReportNavigationProps) {
-  const router = useRouter()
+  console.log('ReportNavigation - Current index:', currentReportIndex)
+  console.log('ReportNavigation - Reports:', reports)
+  console.log('ReportNavigation - Has previous:', hasPreviousReport)
+  console.log('ReportNavigation - Has next:', hasNextReport)
+
+  const navigateToReport = (report: string) => {
+    console.log('Navigating to report:', report)
+    // Create a form and submit it to force a full page reload
+    const form = document.createElement('form')
+    form.method = 'GET'
+    form.action = '/'
+    
+    const reportInput = document.createElement('input')
+    reportInput.type = 'hidden'
+    reportInput.name = 'report'
+    reportInput.value = report
+    
+    form.appendChild(reportInput)
+    document.body.appendChild(form)
+    form.submit()
+  }
 
   return (
     <div className="flex justify-between items-center mb-16">
@@ -26,8 +45,9 @@ export default function ReportNavigation({
           variant="outline" 
           className="flex items-center gap-2"
           onClick={() => {
-            const nextReport = reports[currentReportIndex + 1]
-            router.push(`/?report=${nextReport}`)
+            const prevReport = reports[currentReportIndex + 1]
+            console.log('Navigating to previous report:', prevReport)
+            navigateToReport(prevReport)
           }}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -39,8 +59,9 @@ export default function ReportNavigation({
           variant="outline" 
           className="flex items-center gap-2"
           onClick={() => {
-            const prevReport = reports[currentReportIndex - 1]
-            router.push(`/?report=${prevReport}`)
+            const nextReport = reports[currentReportIndex - 1]
+            console.log('Navigating to next report:', nextReport)
+            navigateToReport(nextReport)
           }}
         >
           Next Report

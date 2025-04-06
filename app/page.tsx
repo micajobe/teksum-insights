@@ -1,11 +1,10 @@
-import { reportData } from "@/lib/data"
+import { getReportData } from "@/lib/server-data"
+import { getAvailableReports } from "@/lib/available-reports"
 import HeadlineGroup from "@/components/headline-group"
 import InsightSection from "@/components/insight-section"
 import OpportunityCard from "@/components/opportunity-card"
 import DropCap from "@/components/drop-cap"
 import ReportNavigation from "@/components/report-navigation"
-import fs from 'fs'
-import path from 'path'
 
 interface BusinessOpportunity {
   opportunity_name: string;
@@ -23,26 +22,63 @@ interface Headline {
   url: string;
 }
 
-// Get list of available reports
-function getAvailableReports() {
-  const reportsDir = path.join(process.cwd(), 'docs')
-  if (!fs.existsSync(reportsDir)) {
-    return []
-  }
-  return fs.readdirSync(reportsDir)
-    .filter(file => file.endsWith('.json'))
-    .sort()
-    .reverse()
-}
-
-export default function Dashboard() {
-  const reports = getAvailableReports()
-  const currentReportIndex = reports.findIndex(report => 
-    report === path.basename(reportData.timestamp)
+export default async function Dashboard({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
+  console.log('Dashboard component rendering')
+  console.log('Search params:', searchParams)
+  
+  const reportParam = searchParams.report as string | undefined
+  const { data: reportData, filename } = await getReportData(reportParam)
+  console.log('getReportData returned:', { filename, hasData: !!reportData })
+  
+  const reports = await getAvailableReports()
+  console.log('getAvailableReports returned:', reports)
+  
+  console.log('=== Debug Information ===')
+  console.log('Current filename:', filename)
+  console.log('All available reports:', reports)
+  console.log('Reports array length:', reports.length)
+  
+  const currentReportIndex = reports.findIndex((report: string) => 
+    report === filename
   )
+  
+  console.log('Current report index:', currentReportIndex)
+  console.log('Current report in array:', reports[currentReportIndex])
+  
+  // Previous report button shows when there are older reports (higher index)
   const hasPreviousReport = currentReportIndex < reports.length - 1
+  // Next report button shows when there are newer reports (lower index)
   const hasNextReport = currentReportIndex > 0
+  
+  console.log('Has previous report:', hasPreviousReport)
+  console.log('Has next report:', hasNextReport)
+  if (hasPreviousReport) {
+    console.log('Previous report would be:', reports[currentReportIndex + 1])
+  }
+  if (hasNextReport) {
+    console.log('Next report would be:', reports[currentReportIndex - 1])
+  }
+  console.log('=== End Debug Information ===')
 
+  // If no report data is available, display a message
+  if (!reportData) {
+    console.log('No report data available, displaying message')
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="text-center py-8">
+          <p className="text-lg text-gray-600">
+            No report data is available at the moment. Please try again later.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  console.log('Rendering report data')
   return (
     <div className="min-h-screen bg-white">
       {/* Header with full-width blue background */}
@@ -133,7 +169,7 @@ export default function Dashboard() {
         {/* Headlines by Source */}
         <section className="mb-16">
           <h2 className="mb-6 font-sans text-2xl font-bold">Headlines by Source</h2>
-          {Array.from(new Set(reportData.headlines.map((h: Headline) => h.source))).map((source) => (
+          {Array.from(new Set(reportData.headlines.map((h: Headline) => h.source))).map((source: string) => (
             <HeadlineGroup
               key={source}
               source={source}
@@ -149,6 +185,26 @@ export default function Dashboard() {
           currentReportIndex={currentReportIndex}
           reports={reports}
         />
+
+        {/* Recent Reports List */}
+        <section className="mt-16 mb-16 border-t pt-8">
+          <h2 className="mb-6 font-sans text-2xl font-bold">Recent Reports</h2>
+          <div className="space-y-2">
+            {reports.slice(0, 5).map((report: string) => (
+              <div key={report} className="flex items-center">
+                <a 
+                  href={`/?report=${encodeURIComponent(report)}`}
+                  className="text-digital-blue hover:underline"
+                >
+                  {report}
+                </a>
+                {report === filename && (
+                  <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Current</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
       {/* Bold TEKSUM Footer */}

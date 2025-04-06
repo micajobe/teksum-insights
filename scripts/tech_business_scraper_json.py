@@ -15,14 +15,14 @@ from typing import List, Dict
 
 # Load environment variables
 print("Loading environment variables...")
-# Get the absolute path to the .env file
-env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
-print(f"Looking for .env file at: {env_path}")
+# Get the absolute path to the .env.local file
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env.local')
+print(f"Looking for .env.local file at: {env_path}")
 print(f"File exists: {os.path.exists(env_path)}")
 
 if os.path.exists(env_path):
     with open(env_path, 'r') as f:
-        print("First line of .env file:", f.readline().strip())
+        print("First line of .env.local file:", f.readline().strip())
 
 load_dotenv(env_path)
 

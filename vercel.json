@@ -12,5 +12,16 @@
       "path": "/api/scrape",
       "schedule": "0 0 */2 * *"
     }
+  ],
+  "routes": [
+    {
+      "src": "/api/scrape",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, x-api-key"
+      },
+      "continue": true
+    }
   ]
 } 
