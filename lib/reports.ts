@@ -9,17 +9,43 @@ const REPORTS_LIST_FILE = path.join(REPORTS_DIR, 'available-reports.json')
 export async function getAvailableReports() {
   try {
     console.log('Getting available reports from:', REPORTS_LIST_FILE)
-    console.log('File exists:', fs.existsSync(REPORTS_LIST_FILE))
     
-    if (!fs.existsSync(REPORTS_LIST_FILE)) {
-      console.log('Available reports file not found, updating list')
-      return updateAvailableReports().files
+    // If the reports directory doesn't exist, create it
+    if (!fs.existsSync(REPORTS_DIR)) {
+      console.log('Reports directory not found, creating it')
+      fs.mkdirSync(REPORTS_DIR, { recursive: true })
+      return []
     }
     
+    // If the available reports file doesn't exist, create it with an empty array
+    if (!fs.existsSync(REPORTS_LIST_FILE)) {
+      console.log('Available reports file not found, creating it')
+      fs.writeFileSync(REPORTS_LIST_FILE, JSON.stringify([], null, 2))
+      return []
+    }
+    
+    // Read the available reports file
     const fileContents = fs.readFileSync(REPORTS_LIST_FILE, 'utf-8')
     const reports = JSON.parse(fileContents)
-    console.log('Available reports loaded:', reports)
-    return reports
+    
+    // Validate that all reports in the list actually exist
+    const validReports = reports.filter((report: string) => {
+      const reportPath = path.join(REPORTS_DIR, report)
+      const exists = fs.existsSync(reportPath)
+      if (!exists) {
+        console.warn(`Report listed in available-reports.json but file not found: ${report}`)
+      }
+      return exists
+    })
+    
+    // If some reports were invalid, update the available reports file
+    if (validReports.length !== reports.length) {
+      console.log('Updating available reports list to remove invalid entries')
+      fs.writeFileSync(REPORTS_LIST_FILE, JSON.stringify(validReports, null, 2))
+    }
+    
+    console.log('Available reports loaded:', validReports)
+    return validReports
   } catch (error) {
     console.error('Error getting available reports:', error)
     return []
@@ -30,26 +56,27 @@ export async function getAvailableReports() {
 export function updateAvailableReports() {
   try {
     console.log('Updating available reports from directory:', REPORTS_DIR)
-    console.log('Directory exists:', fs.existsSync(REPORTS_DIR))
     
+    // If the reports directory doesn't exist, create it
     if (!fs.existsSync(REPORTS_DIR)) {
-      console.error('Reports directory not found:', REPORTS_DIR)
+      console.log('Reports directory not found, creating it')
+      fs.mkdirSync(REPORTS_DIR, { recursive: true })
       return {
         files: [],
-        error: {
-          message: 'Reports directory not found',
-          details: {
-            reportsDir: REPORTS_DIR,
-            directoryExists: false
-          }
-        }
+        error: null
       }
     }
     
     // Get all JSON files in the reports directory
     const files = fs.readdirSync(REPORTS_DIR)
       .filter(file => file.endsWith('.json') && file !== 'available-reports.json')
-      .sort((a, b) => b.localeCompare(a)) // Sort in descending order (newest first)
+      .filter(file => file.match(/tech_business_report_\d{8}_\d{6}\.json$/))
+      .sort((a, b) => {
+        // Extract date from filename (format: tech_business_report_YYYYMMDD_HHMMSS.json)
+        const dateA = a.match(/\d{8}_\d{6}/)?.[0] || '';
+        const dateB = b.match(/\d{8}_\d{6}/)?.[0] || '';
+        return dateB.localeCompare(dateA); // Sort in descending order (newest first)
+      });
 
     console.log('Found files:', files)
 
