@@ -1,6 +1,7 @@
 import type { ReportData } from "./types"
 import fs from 'fs'
 import path from 'path'
+import { headers } from 'next/headers'
 
 // Read the latest report JSON file
 const reportsDir = path.join(process.cwd(), 'docs')
@@ -58,8 +59,24 @@ try {
     throw new Error('No JSON reports found')
   }
 
-  const latestReport = jsonFiles[0]
-  const reportPath = path.join(reportsDir, latestReport)
+  // Get the report filename from the URL if available
+  let targetReport = jsonFiles[0]
+  
+  try {
+    // Try to get the report parameter from the URL
+    const headersList = headers()
+    const url = new URL(headersList.get('x-url') || 'http://localhost:3000')
+    const reportParam = url.searchParams.get('report')
+    
+    if (reportParam && jsonFiles.includes(reportParam)) {
+      targetReport = reportParam
+    }
+  } catch (error) {
+    console.error('Error getting URL parameters:', error)
+    // Fall back to the latest report
+  }
+
+  const reportPath = path.join(reportsDir, targetReport)
   const reportContent = fs.readFileSync(reportPath, 'utf-8')
   
   const parsedData = JSON.parse(reportContent)

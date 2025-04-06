@@ -3,8 +3,9 @@ import HeadlineGroup from "@/components/headline-group"
 import InsightSection from "@/components/insight-section"
 import OpportunityCard from "@/components/opportunity-card"
 import DropCap from "@/components/drop-cap"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import ReportNavigation from "@/components/report-navigation"
+import fs from 'fs'
+import path from 'path'
 
 interface BusinessOpportunity {
   opportunity_name: string;
@@ -22,7 +23,26 @@ interface Headline {
   url: string;
 }
 
+// Get list of available reports
+function getAvailableReports() {
+  const reportsDir = path.join(process.cwd(), 'docs')
+  if (!fs.existsSync(reportsDir)) {
+    return []
+  }
+  return fs.readdirSync(reportsDir)
+    .filter(file => file.endsWith('.json'))
+    .sort()
+    .reverse()
+}
+
 export default function Dashboard() {
+  const reports = getAvailableReports()
+  const currentReportIndex = reports.findIndex(report => 
+    report === path.basename(reportData.timestamp)
+  )
+  const hasPreviousReport = currentReportIndex < reports.length - 1
+  const hasNextReport = currentReportIndex > 0
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header with full-width blue background */}
@@ -123,16 +143,12 @@ export default function Dashboard() {
         </section>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between items-center mb-16">
-          <Button variant="outline" className="flex items-center gap-2">
-            <ChevronLeft className="h-4 w-4" />
-            Previous Report
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2">
-            Next Report
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <ReportNavigation
+          hasPreviousReport={hasPreviousReport}
+          hasNextReport={hasNextReport}
+          currentReportIndex={currentReportIndex}
+          reports={reports}
+        />
       </div>
 
       {/* Bold TEKSUM Footer */}
