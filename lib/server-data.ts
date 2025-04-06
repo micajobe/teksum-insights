@@ -1,4 +1,4 @@
-import type { ReportData } from "./types"
+import type { ReportData, ReportAnalysis } from "./types"
 import fs from 'fs'
 import path from 'path'
 import { headers } from 'next/headers'
@@ -41,9 +41,14 @@ const defaultData: ReportData = {
   }
 }
 
+// Type for analysis sections
+type AnalysisSection = 'major_technology_trends' | 'business_impact_analysis' | 'industry_movements' | 'emerging_technologies' | 'strategic_takeaways';
+
 export async function getReportData(reportParam?: string | null) {
   try {
     console.log('getReportData called with reportParam:', reportParam)
+    console.log('REPORTS_DIR:', REPORTS_DIR)
+    console.log('Directory exists:', fs.existsSync(REPORTS_DIR))
     
     // Ensure the reports directory exists
     if (!fs.existsSync(REPORTS_DIR)) {
@@ -102,6 +107,7 @@ export async function getReportData(reportParam?: string | null) {
     // Read the report file
     const filePath = path.join(REPORTS_DIR, filename)
     console.log('Reading report from:', filePath)
+    console.log('File exists:', fs.existsSync(filePath))
     
     if (!fs.existsSync(filePath)) {
       console.error(`Report file not found: ${filePath}`)
@@ -122,7 +128,13 @@ export async function getReportData(reportParam?: string | null) {
     let data: ReportData
     try {
       const fileContents = fs.readFileSync(filePath, 'utf-8')
+      console.log('File contents length:', fileContents.length)
+      
+      // Log the first 100 characters of the file contents for debugging
+      console.log('File contents preview:', fileContents.substring(0, 100))
+      
       data = JSON.parse(fileContents)
+      console.log('Parsed data:', JSON.stringify(data).substring(0, 100) + '...')
       
       // Extract date from filename (format: tech_business_report_YYYYMMDD_HHMMSS.json)
       const dateMatch = filename.match(/\d{8}_\d{6}/)
@@ -146,6 +158,56 @@ export async function getReportData(reportParam?: string | null) {
         
         data.timestamp = date.toISOString()
       }
+      
+      // Ensure all required fields are present
+      if (!data.analysis) {
+        console.error('Report data missing analysis field')
+        data.analysis = defaultData.analysis
+      }
+      
+      if (!data.headlines) {
+        console.error('Report data missing headlines field')
+        data.headlines = defaultData.headlines
+      }
+      
+      // Ensure each analysis section has the required fields
+      const sections: AnalysisSection[] = [
+        'major_technology_trends',
+        'business_impact_analysis',
+        'industry_movements',
+        'emerging_technologies',
+        'strategic_takeaways'
+      ]
+      
+      for (const section of sections) {
+        if (!data.analysis[section]) {
+          console.error(`Report data missing ${section} section`)
+          data.analysis[section] = defaultData.analysis[section]
+        } else {
+          // Ensure each section has the required fields
+          if (!data.analysis[section].summary) {
+            console.error(`Report data missing ${section}.summary field`)
+            data.analysis[section].summary = defaultData.analysis[section].summary
+          }
+          
+          if (!data.analysis[section].key_insights) {
+            console.error(`Report data missing ${section}.key_insights field`)
+            data.analysis[section].key_insights = defaultData.analysis[section].key_insights
+          }
+          
+          if (!data.analysis[section].key_headlines) {
+            console.error(`Report data missing ${section}.key_headlines field`)
+            data.analysis[section].key_headlines = defaultData.analysis[section].key_headlines
+          }
+        }
+      }
+      
+      // Ensure business_opportunities field is present
+      if (!data.analysis.business_opportunities) {
+        console.error('Report data missing business_opportunities field')
+        data.analysis.business_opportunities = defaultData.analysis.business_opportunities
+      }
+      
     } catch (parseError) {
       console.error('Error parsing report file:', parseError)
       return { 
