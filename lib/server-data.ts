@@ -4,7 +4,10 @@ import path from 'path'
 import { headers } from 'next/headers'
 import { getAvailableReports } from './available-reports'
 
-const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
+export const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
+
+// Re-export getAvailableReports
+export { getAvailableReports }
 
 // Default data in case no valid report is found
 const defaultData: ReportData = {
@@ -50,10 +53,21 @@ export async function getReportData(reportParam?: string | null) {
     const reports = await getAvailableReports()
     console.log('Available reports:', reports)
     
-    // If no reports are available, return null
+    // If no reports are available, return null with error info
     if (reports.length === 0) {
       console.log('No reports available')
-      return { data: null, filename: null }
+      return { 
+        data: null, 
+        filename: null,
+        error: {
+          message: 'No reports available',
+          details: {
+            reportsDir: REPORTS_DIR,
+            directoryExists: fs.existsSync(REPORTS_DIR),
+            availableReports: reports
+          }
+        }
+      }
     }
 
     // If a specific report is requested, use it
@@ -80,7 +94,18 @@ export async function getReportData(reportParam?: string | null) {
     
     if (!fs.existsSync(filePath)) {
       console.error(`Report file not found: ${filePath}`)
-      return { data: null, filename: null }
+      return { 
+        data: null, 
+        filename: null,
+        error: {
+          message: `Report file not found: ${filePath}`,
+          details: {
+            filePath,
+            fileExists: false,
+            availableReports: reports
+          }
+        }
+      }
     }
     
     const fileContents = fs.readFileSync(filePath, 'utf-8')
@@ -91,6 +116,17 @@ export async function getReportData(reportParam?: string | null) {
   } catch (error) {
     console.error('Error reading report data:', error)
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available')
-    return { data: null, filename: null }
+    return { 
+      data: null, 
+      filename: null,
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: {
+          reportsDir: REPORTS_DIR,
+          directoryExists: fs.existsSync(REPORTS_DIR),
+          stack: error instanceof Error ? error.stack : 'No stack trace available'
+        }
+      }
+    }
   }
 } 

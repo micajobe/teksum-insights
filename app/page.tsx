@@ -1,10 +1,11 @@
-import { getReportData } from "@/lib/server-data"
-import { getAvailableReports } from "@/lib/available-reports"
+import { getReportData, getAvailableReports } from "@/lib/server-data"
+import { REPORTS_DIR } from "@/lib/server-data"
 import HeadlineGroup from "@/components/headline-group"
 import InsightSection from "@/components/insight-section"
 import OpportunityCard from "@/components/opportunity-card"
 import DropCap from "@/components/drop-cap"
 import ReportNavigation from "@/components/report-navigation"
+import fs from "fs"
 
 interface BusinessOpportunity {
   opportunity_name: string;
@@ -34,7 +35,7 @@ export default async function Dashboard({
   const { data: reportData, filename } = await getReportData(reportParam)
   console.log('getReportData returned:', { filename, hasData: !!reportData })
   
-  const reports = await getAvailableReports()
+  const reports = await getAvailableReports() as string[]
   console.log('getAvailableReports returned:', reports)
   
   console.log('=== Debug Information ===')
@@ -70,9 +71,23 @@ export default async function Dashboard({
     return (
       <div className="min-h-screen bg-white">
         <div className="text-center py-8">
-          <p className="text-lg text-gray-600">
-            No report data is available at the moment. Please try again later.
-          </p>
+          <div className="max-w-3xl mx-auto px-4">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Report Data Unavailable</h2>
+            <p className="text-lg text-gray-600 mb-6">
+              No report data is available at the moment. Please try again later.
+            </p>
+            
+            <div className="bg-gray-100 p-6 rounded-lg text-left">
+              <h3 className="text-lg font-semibold mb-2">Debug Information:</h3>
+              <div className="space-y-2 text-sm">
+                <p><span className="font-medium">Reports Directory:</span> {REPORTS_DIR}</p>
+                <p><span className="font-medium">Directory Exists:</span> {fs.existsSync(REPORTS_DIR) ? 'Yes' : 'No'}</p>
+                <p><span className="font-medium">Available Reports:</span> {reports.length > 0 ? (reports as string[]).join(', ') : 'None'}</p>
+                <p><span className="font-medium">Requested Report:</span> {reportParam || 'Latest'}</p>
+                <p><span className="font-medium">Current Filename:</span> {filename || 'None'}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
