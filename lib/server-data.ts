@@ -157,6 +157,16 @@ export async function getReportData(reportParam?: string | null) {
         )
         
         data.timestamp = date.toISOString()
+      } else {
+        // Try the alternative format: tech_business_report_YYYY-MM-DD.json
+        const altDateMatch = filename.match(/\d{4}-\d{2}-\d{2}/)
+        if (altDateMatch) {
+          const dateStr = altDateMatch[0]
+          const [year, month, day] = dateStr.split('-').map((num: string) => parseInt(num))
+          
+          const date = new Date(year, month - 1, day)
+          data.timestamp = date.toISOString()
+        }
       }
       
       // Ensure all required fields are present

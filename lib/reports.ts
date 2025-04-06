@@ -70,11 +70,42 @@ export function updateAvailableReports() {
     // Get all JSON files in the reports directory
     const files = fs.readdirSync(REPORTS_DIR)
       .filter(file => file.endsWith('.json') && file !== 'available-reports.json')
-      .filter(file => file.match(/tech_business_report_\d{8}_\d{6}\.json$/))
+      .filter(file => {
+        // Accept both formats:
+        // 1. tech_business_report_YYYYMMDD_HHMMSS.json
+        // 2. tech_business_report_YYYY-MM-DD.json
+        return file.match(/tech_business_report_\d{8}_\d{6}\.json$/) || 
+               file.match(/tech_business_report_\d{4}-\d{2}-\d{2}\.json$/)
+      })
       .sort((a, b) => {
-        // Extract date from filename (format: tech_business_report_YYYYMMDD_HHMMSS.json)
-        const dateA = a.match(/\d{8}_\d{6}/)?.[0] || '';
-        const dateB = b.match(/\d{8}_\d{6}/)?.[0] || '';
+        // Extract date from filename for sorting
+        let dateA = '';
+        let dateB = '';
+        
+        // Handle format 1: tech_business_report_YYYYMMDD_HHMMSS.json
+        const matchA1 = a.match(/\d{8}_\d{6}/);
+        if (matchA1) {
+          dateA = matchA1[0];
+        }
+        
+        // Handle format 2: tech_business_report_YYYY-MM-DD.json
+        const matchA2 = a.match(/\d{4}-\d{2}-\d{2}/);
+        if (matchA2) {
+          dateA = matchA2[0].replace(/-/g, '') + '000000';
+        }
+        
+        // Handle format 1: tech_business_report_YYYYMMDD_HHMMSS.json
+        const matchB1 = b.match(/\d{8}_\d{6}/);
+        if (matchB1) {
+          dateB = matchB1[0];
+        }
+        
+        // Handle format 2: tech_business_report_YYYY-MM-DD.json
+        const matchB2 = b.match(/\d{4}-\d{2}-\d{2}/);
+        if (matchB2) {
+          dateB = matchB2[0].replace(/-/g, '') + '000000';
+        }
+        
         return dateB.localeCompare(dateA); // Sort in descending order (newest first)
       });
 
