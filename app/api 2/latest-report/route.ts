@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import cheerio from 'cheerio';
+// Use require instead of import for cheerio to avoid ESM issues
+const cheerio = require('cheerio');
 
 export async function GET() {
   try {
@@ -48,27 +49,27 @@ export async function GET() {
         analysis: {
           major_technology_trends: {
             summary: $('.section:contains("Technology Trends")').find('p').first().text() || '',
-            key_insights: $('.section:contains("Technology Trends")').find('ul li').map((_: number, el: cheerio.Element) => $(el).text()).get(),
+            key_insights: $('.section:contains("Technology Trends")').find('ul li').map(function(this: any) { return $(this).text(); }).get(),
             key_headlines: [] as string[]
           },
           business_impact_analysis: {
             summary: $('.section:contains("Business Impact")').find('p').first().text() || '',
-            key_insights: $('.section:contains("Business Impact")').find('ul li').map((_: number, el: cheerio.Element) => $(el).text()).get(),
+            key_insights: $('.section:contains("Business Impact")').find('ul li').map(function(this: any) { return $(this).text(); }).get(),
             key_headlines: [] as string[]
           },
           industry_movements: {
             summary: $('.section:contains("Industry Movements")').find('p').first().text() || '',
-            key_insights: $('.section:contains("Industry Movements")').find('ul li').map((_: number, el: cheerio.Element) => $(el).text()).get(),
+            key_insights: $('.section:contains("Industry Movements")').find('ul li').map(function(this: any) { return $(this).text(); }).get(),
             key_headlines: [] as string[]
           }
         }
       };
       
       // Extract headlines
-      $('.headline').each((_: number, el: cheerio.Element) => {
-        const title = $(el).find('h3').text();
-        const source = $(el).find('.source').text();
-        const url = $(el).find('a').attr('href');
+      $('.headline').each(function(this: any) {
+        const title = $(this).find('h3').text();
+        const source = $(this).find('.source').text();
+        const url = $(this).find('a').attr('href');
         if (title) {
           reportData.headlines.push({ title, source, url });
         }

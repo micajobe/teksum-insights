@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Add transpilePackages to handle undici
+  transpilePackages: ['undici', 'cheerio'],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -24,6 +26,7 @@ const nextConfig = {
         zlib: false,
       };
     }
+    
     return config;
   },
   // Disable font optimization
