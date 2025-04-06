@@ -23,8 +23,8 @@ export async function GET(request: Request) {
       )
     }
     
-    // Run the scraper script
-    const { stdout, stderr } = await execAsync(`python ${scraperPath}`)
+    // Run the scraper script using python3 instead of python
+    const { stdout, stderr } = await execAsync(`python3 ${scraperPath}`)
     
     console.log('Scraper output:', stdout)
     if (stderr) {
