@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans bg-background text-foreground">
+      <body className="font-['Satoshi'] bg-background text-foreground">
         <main className="min-h-screen">
           {children}
         </main>

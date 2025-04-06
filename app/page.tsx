@@ -31,7 +31,7 @@ export default function Dashboard() {
           <p className="text-sm font-medium uppercase tracking-wider text-white opacity-80">
             Tech Business Intelligence
           </p>
-          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-tight mt-2">
+          <h1 className="font-['Zodiak'] text-4xl sm:text-5xl md:text-6xl font-[555] tracking-tight text-white leading-tight mt-2">
             {reportData.analysis.major_technology_trends.summary.split(".")[0]}.
           </h1>
           <p className="mt-4 text-sm text-white opacity-80">
@@ -136,14 +136,14 @@ export default function Dashboard() {
       </div>
 
       {/* Bold TEKSUM Footer */}
-      <div className="w-full flex justify-center">
-        <footer className="w-full bg-digital-blue py-24 sm:py-32 px-8">
-          <h2 className="font-sans text-white text-7xl sm:text-9xl md:text-[12rem] font-extrabold text-center tracking-tighter">
+      <footer className="w-full bg-digital-blue py-24 sm:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-['Satoshi'] text-white text-8xl sm:text-[10rem] md:text-[14rem] font-extrabold text-center tracking-tighter">
             TEKSUM
           </h2>
           <div className="text-xs text-center text-white opacity-80 mt-4">© 2025 All rights reserved.</div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   )
 } 
