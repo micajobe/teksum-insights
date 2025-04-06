@@ -2,8 +2,11 @@ import fs from 'fs'
 import path from 'path'
 
 // Export the REPORTS_DIR constant
-export const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports')
-const REPORTS_LIST_FILE = path.join(process.cwd(), 'public', 'reports', 'available-reports.json')
+// Use the correct path in the Vercel environment
+export const REPORTS_DIR = process.env.VERCEL 
+  ? '/vercel/path1/public/reports' 
+  : path.join(process.cwd(), 'public', 'reports')
+const REPORTS_LIST_FILE = path.join(REPORTS_DIR, 'available-reports.json')
 
 export function updateAvailableReports() {
   try {
