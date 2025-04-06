@@ -41,6 +41,10 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: '/api/reports/:path*',
+        destination: '/api/reports/:path*',
+      },
+      {
         source: '/reports/:path*',
         destination: '/reports/:path*',
       },
@@ -59,6 +63,10 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  // Ensure the reports directory is included in the build
+  async redirects() {
+    return [];
   },
 };
 
