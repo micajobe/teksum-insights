@@ -7,6 +7,13 @@ import { getAvailableReports, REPORTS_DIR } from './reports'
 // Re-export REPORTS_DIR and getAvailableReports
 export { REPORTS_DIR, getAvailableReports }
 
+// Define the headline object type
+interface HeadlineObject {
+  title: string;
+  source: string;
+  url: string;
+}
+
 // Default data in case no valid report is found
 const defaultData: ReportData = {
   timestamp: new Date().toISOString(),
@@ -43,6 +50,30 @@ const defaultData: ReportData = {
 
 // Type for analysis sections
 type AnalysisSection = 'major_technology_trends' | 'business_impact_analysis' | 'industry_movements' | 'emerging_technologies' | 'strategic_takeaways';
+
+// Helper function to convert string headlines to object format
+function convertHeadlinesToObjects(headlines: string[]): HeadlineObject[] {
+  return headlines.map(headline => {
+    // Extract title and source from the headline string
+    // Format is typically: "Title (Source): Description"
+    const match = headline.match(/^(.*?)\s*\((.*?)\):\s*(.*)$/);
+    if (match) {
+      const [_, title, source, description] = match;
+      return {
+        title: title.trim(),
+        source: source.trim(),
+        url: "#" // No URL available in the string format
+      };
+    }
+    
+    // If the format doesn't match, just use the whole string as the title
+    return {
+      title: headline,
+      source: "Unknown",
+      url: "#"
+    };
+  });
+}
 
 export async function getReportData(reportParam?: string | null) {
   try {
@@ -208,6 +239,14 @@ export async function getReportData(reportParam?: string | null) {
           if (!data.analysis[section].key_headlines) {
             console.error(`Report data missing ${section}.key_headlines field`)
             data.analysis[section].key_headlines = defaultData.analysis[section].key_headlines
+          } else {
+            // Convert string headlines to object format if needed
+            const headlines = data.analysis[section].key_headlines;
+            if (headlines.length > 0 && typeof headlines[0] === 'string') {
+              console.log(`Converting ${section}.key_headlines from strings to objects`);
+              // Use type assertion to handle the conversion
+              (data.analysis[section] as any).key_headlines = convertHeadlinesToObjects(headlines as string[]);
+            }
           }
         }
       }
