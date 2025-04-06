@@ -11,18 +11,8 @@ export default function NavLinks() {
           </Link>
         </li>
         <li>
-          <Link href="/test" className="text-blue-600 hover:underline">
-            Test Page
-          </Link>
-        </li>
-        <li>
-          <Link href="/simple" className="text-blue-600 hover:underline">
-            Simple View
-          </Link>
-        </li>
-        <li>
-          <Link href="/raw" className="text-blue-600 hover:underline">
-            Raw Data
+          <Link href="/debug" className="text-blue-600 hover:underline">
+            Debug Tools
           </Link>
         </li>
       </ul>

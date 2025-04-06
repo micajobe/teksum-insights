@@ -4,15 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/copy-reports.js",
     "start": "next start",
     "lint": "next lint",
-    "test": "node scripts/test-api.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "test:local": "BASE_URL=http://localhost:3000 node scripts/test-api.js",
     "test:vercel": "BASE_URL=https://teksum-insights.vercel.app node scripts/test-api.js",
     "convert-reports": "npx ts-node --project scripts/tsconfig.json scripts/convert-reports.ts",
     "generate-reports": "npx ts-node --project scripts/tsconfig.json scripts/generate-reports.ts",
-    "scrape": "npx ts-node --project scripts/tsconfig.json scripts/run-scraper.ts"
+    "scrape": "npx ts-node --project scripts/tsconfig.json scripts/run-scraper.ts",
+    "copy-reports": "node scripts/copy-reports.js",
+    "test-reports": "node scripts/test-reports.js",
+    "test-reports:vercel": "BASE_URL=https://teksum-insights.vercel.app node scripts/test-reports.js"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

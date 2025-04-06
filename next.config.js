@@ -34,7 +34,32 @@ const nextConfig = {
   // Remove experimental options that were causing issues
   experimental: {
     // Add only supported experimental features here if needed
-  }
+  },
+  // Ensure public directory is included in the build
+  output: 'standalone',
+  // Copy the reports directory to the build output
+  async rewrites() {
+    return [
+      {
+        source: '/reports/:path*',
+        destination: '/reports/:path*',
+      },
+    ];
+  },
+  // Copy the reports directory to the build output
+  async headers() {
+    return [
+      {
+        source: '/reports/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig; 

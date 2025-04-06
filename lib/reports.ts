@@ -10,17 +10,27 @@ export async function getAvailableReports() {
   try {
     console.log('Getting available reports from:', REPORTS_LIST_FILE)
     
-    // If the reports directory doesn't exist, create it
-    if (!fs.existsSync(REPORTS_DIR)) {
+    // Check if we're in a serverless environment (Vercel)
+    const isServerless = process.env.VERCEL === '1';
+    console.log('Is serverless environment:', isServerless);
+    
+    // If the reports directory doesn't exist, create it (only in non-serverless environment)
+    if (!fs.existsSync(REPORTS_DIR) && !isServerless) {
       console.log('Reports directory not found, creating it')
       fs.mkdirSync(REPORTS_DIR, { recursive: true })
       return []
     }
     
-    // If the available reports file doesn't exist, create it with an empty array
-    if (!fs.existsSync(REPORTS_LIST_FILE)) {
+    // If the available reports file doesn't exist, create it with an empty array (only in non-serverless environment)
+    if (!fs.existsSync(REPORTS_LIST_FILE) && !isServerless) {
       console.log('Available reports file not found, creating it')
       fs.writeFileSync(REPORTS_LIST_FILE, JSON.stringify([], null, 2))
+      return []
+    }
+    
+    // If we're in a serverless environment and the file doesn't exist, return an empty array
+    if (isServerless && !fs.existsSync(REPORTS_LIST_FILE)) {
+      console.log('In serverless environment and available reports file not found, returning empty array')
       return []
     }
     
@@ -38,8 +48,8 @@ export async function getAvailableReports() {
       return exists
     })
     
-    // If some reports were invalid, update the available reports file
-    if (validReports.length !== reports.length) {
+    // If some reports were invalid, update the available reports file (only in non-serverless environment)
+    if (validReports.length !== reports.length && !isServerless) {
       console.log('Updating available reports list to remove invalid entries')
       fs.writeFileSync(REPORTS_LIST_FILE, JSON.stringify(validReports, null, 2))
     }
