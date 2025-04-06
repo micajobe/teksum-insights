@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { headers } from 'next/headers'
 import { getAvailableReports, REPORTS_DIR } from './reports'
+import { getReportsFromSupabase, getReportFromSupabase, isSupabaseConfigured } from './supabase'
 
 // Re-export REPORTS_DIR and getAvailableReports
 export { REPORTS_DIR, getAvailableReports }
@@ -41,9 +42,41 @@ const defaultData: ReportData = {
   }
 }
 
+// Check if we should use Supabase
+const useSupabase = process.env.NEXT_PUBLIC_USE_SUPABASE === 'true' && isSupabaseConfigured();
+
 export async function getReportData(reportParam?: string | null) {
   try {
     console.log('getReportData called with reportParam:', reportParam)
+    
+    // If Supabase is configured and enabled, try to get data from there first
+    if (useSupabase) {
+      console.log('Using Supabase for report data')
+      
+      // Get all reports from Supabase
+      const reports = await getReportsFromSupabase()
+      
+      if (reports && reports.length > 0) {
+        // If a specific report is requested, use it
+        let filename = reportParam || reports[0].filename
+        
+        // Find the requested report
+        const report = reports.find(r => r.filename === filename)
+        
+        if (report) {
+          console.log(`Found report ${filename} in Supabase`)
+          return { data: report.data, filename }
+        } else {
+          console.log(`Report ${filename} not found in Supabase, using latest`)
+          return { data: reports[0].data, filename: reports[0].filename }
+        }
+      } else {
+        console.log('No reports found in Supabase, falling back to file system')
+      }
+    }
+    
+    // Fall back to file system if Supabase is not configured or no reports were found
+    console.log('Using file system for report data')
     console.log('REPORTS_DIR:', REPORTS_DIR)
     console.log('Directory exists:', fs.existsSync(REPORTS_DIR))
     
