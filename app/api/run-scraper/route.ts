@@ -1,35 +1,24 @@
 import { NextResponse } from 'next/server'
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import path from 'path'
 import fs from 'fs'
-
-const execAsync = promisify(exec)
 
 export async function GET(request: Request) {
   try {
     console.log('Starting scraper...')
     
-    // Get the absolute path to the scraper script
-    const scraperPath = path.join(process.cwd(), 'scripts', 'tech_business_scraper.py')
-    console.log('Scraper path:', scraperPath)
+    // Call the Python serverless function
+    const response = await fetch(`${request.url.replace('/api/run-scraper', '/api/scrape')}`)
+    const data = await response.json()
     
-    // Check if the scraper script exists
-    if (!fs.existsSync(scraperPath)) {
-      console.error('Scraper script not found:', scraperPath)
+    if (!response.ok) {
+      console.error('Error running scraper:', data.error)
       return NextResponse.json(
-        { error: 'Scraper script not found' },
-        { status: 500 }
+        { error: data.error },
+        { status: response.status }
       )
     }
     
-    // Run the scraper script using python3 instead of python
-    const { stdout, stderr } = await execAsync(`python3 ${scraperPath}`)
-    
-    console.log('Scraper output:', stdout)
-    if (stderr) {
-      console.error('Scraper errors:', stderr)
-    }
+    console.log('Scraper completed successfully')
     
     // Check if the reports directory exists and list the files
     const reportsDir = path.join(process.cwd(), 'public', 'reports')

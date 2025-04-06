@@ -10,7 +10,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "scripts/tech_business_scraper.py",
+      "src": "app/api/scrape/route.py",
       "use": "@vercel/python"
     }
   ],
