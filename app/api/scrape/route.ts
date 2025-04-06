@@ -316,32 +316,42 @@ async function getSummary(headlines: Headline[]): Promise<Analysis | null> {
        - Leverage current technology trends
        - Address identified market needs
 
-    Format the response as valid JSON with rich, detailed content in each section.`;
+    IMPORTANT: Your response must be a valid JSON object. Do not include any text before or after the JSON object.`;
 
     // Generate thematic analysis using the OpenAI API
     console.log('Sending request to OpenAI API...');
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
-        { role: "system", content: "You are a strategic analyst with expertise in technology trends, business strategy, and industry analysis. Provide detailed, narrative-rich analysis in JSON format." },
+        { 
+          role: "system", 
+          content: "You are a strategic analyst with expertise in technology trends, business strategy, and industry analysis. Your responses must be valid JSON objects only, with no additional text." 
+        },
         { role: "user", content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 2000
+      max_tokens: 2000,
+      response_format: { type: "json_object" }
     });
     console.log('Received response from OpenAI API');
 
     const content = response.choices[0].message.content;
     if (!content) {
       console.error('No content received from OpenAI');
-      return null;
+      return generateFallbackAnalysis(headlines);
     }
 
     // Parse the response as JSON
     console.log('Parsing OpenAI response as JSON');
-    const analysis = JSON.parse(content);
-    console.log('Successfully parsed OpenAI response');
-    return analysis;
+    try {
+      const analysis = JSON.parse(content);
+      console.log('Successfully parsed OpenAI response');
+      return analysis;
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', parseError);
+      console.error('Raw response:', content);
+      return generateFallbackAnalysis(headlines);
+    }
   } catch (error) {
     console.error('Error generating summary:', error);
     return generateFallbackAnalysis(headlines);
