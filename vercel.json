@@ -8,6 +8,10 @@
     {
       "src": "app/api/run-scraper/route.ts",
       "use": "@vercel/node"
+    },
+    {
+      "src": "scripts/tech_business_scraper.py",
+      "use": "@vercel/python"
     }
   ],
   "public": true,
