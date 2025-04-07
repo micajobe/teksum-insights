@@ -7,7 +7,7 @@ export interface Headline {
 export interface TechnologyTrend {
   summary: string
   key_insights: string[]
-  key_headlines: string[]
+  key_headlines: string[] | Headline[]
 }
 
 export interface BusinessOpportunity {

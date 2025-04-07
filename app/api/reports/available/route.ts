@@ -1,38 +1,53 @@
 import { NextResponse } from 'next/server';
-import { getAvailableReports } from '@/lib/reports';
-import { getReportsFromSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import fs from 'fs';
+import path from 'path';
 
-// Check if we should use Supabase
-const useSupabase = process.env.NEXT_PUBLIC_USE_SUPABASE === 'true' && isSupabaseConfigured();
+// Define the reports directory path
+const REPORTS_DIR = path.join(process.cwd(), 'public', 'reports');
+const REPORTS_LIST_FILE = path.join(REPORTS_DIR, 'available-reports.json');
 
 export async function GET() {
   try {
-    // If Supabase is configured and enabled, try to get data from there first
-    if (useSupabase) {
-      console.log('Using Supabase for available reports');
-      
-      // Get all reports from Supabase
-      const reports = await getReportsFromSupabase();
-      
-      if (reports && reports.length > 0) {
-        // Extract filenames from reports
-        const filenames = reports.map(report => report.filename);
-        console.log('Available reports from Supabase:', filenames);
-        return NextResponse.json(filenames);
-      } else {
-        console.log('No reports found in Supabase, falling back to file system');
-      }
+    console.log('API route: Serving available reports list');
+    
+    // Check if the reports directory exists
+    if (!fs.existsSync(REPORTS_DIR)) {
+      console.error('Reports directory not found:', REPORTS_DIR);
+      return NextResponse.json(
+        { error: 'Reports directory not found' },
+        { status: 404 }
+      );
     }
     
-    // Fall back to file system if Supabase is not configured or no reports were found
-    console.log('Using file system for available reports');
-    const reports = await getAvailableReports();
-    console.log('Available reports from file system:', reports);
-    return NextResponse.json(reports);
+    // Check if the available reports file exists
+    if (!fs.existsSync(REPORTS_LIST_FILE)) {
+      console.error('Available reports file not found:', REPORTS_LIST_FILE);
+      return NextResponse.json(
+        { error: 'Available reports file not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Read the available reports file
+    const fileContents = fs.readFileSync(REPORTS_LIST_FILE, 'utf-8');
+    const reports = JSON.parse(fileContents);
+    
+    // Validate that all reports in the list actually exist
+    const validReports = reports.filter((report: string) => {
+      const reportPath = path.join(REPORTS_DIR, report);
+      const exists = fs.existsSync(reportPath);
+      if (!exists) {
+        console.warn(`Report listed in available-reports.json but file not found: ${report}`);
+      }
+      return exists;
+    });
+    
+    // Return the available reports list
+    return NextResponse.json(validReports);
   } catch (error) {
-    console.error('Error getting available reports:', error);
+    console.error('Error serving available reports list:', error);
     return NextResponse.json(
-      { error: 'Failed to get available reports' },
+      { error: 'Error serving available reports list' },
       { status: 500 }
     );
   }

@@ -1,0 +1,11 @@
+# Mark critical display files as binary to prevent accidental modifications
+app/page.tsx binary
+components/opportunity-card.tsx binary
+lib/types.ts binary
+
+# Mark scraper files as text to allow modifications
+scripts/tech_business_scraper.py text
+app/api/scrape/route.py text
+app/api/run-scraper/route.ts text
+src/lib/scraper.ts text
+src/lib/report-generator.ts text 

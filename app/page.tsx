@@ -6,6 +6,7 @@ import OpportunityCard from "@/components/opportunity-card"
 import DropCap from "@/components/drop-cap"
 import ReportNavigation from "@/components/report-navigation"
 import fs from "fs"
+import NavLinks from '@/components/nav-links'
 
 interface BusinessOpportunity {
   opportunity_name: string;
@@ -71,6 +72,7 @@ export default async function Dashboard({
     console.log('No report data available, displaying message')
     return (
       <div className="min-h-screen bg-white">
+        <NavLinks />
         <div className="text-center py-8">
           <div className="max-w-3xl mx-auto px-4">
             <h2 className="text-2xl font-bold text-red-600 mb-4">Report Data Unavailable</h2>
@@ -109,6 +111,7 @@ export default async function Dashboard({
   console.log('Rendering report data')
   return (
     <div className="min-h-screen bg-white">
+      <NavLinks />
       {/* Header with full-width blue background */}
       <div className="w-full animated-gradient mb-16">
         <div className="mx-auto max-w-2xl px-4 py-16 sm:py-20 relative z-10">

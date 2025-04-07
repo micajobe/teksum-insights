@@ -4,13 +4,21 @@
     {
       "src": "package.json",
       "use": "@vercel/next"
+    },
+    {
+      "src": "app/api/run-scraper/route.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "app/api/scrape/route.py",
+      "use": "@vercel/python"
     }
   ],
   "public": true,
   "crons": [
     {
-      "path": "/api/scrape",
-      "schedule": "0 0 */2 * *"
+      "path": "/api/run-scraper",
+      "schedule": "0 0 * * *"
     }
   ],
   "routes": [
